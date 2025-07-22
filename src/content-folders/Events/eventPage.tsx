@@ -86,7 +86,7 @@ export const EventDetailPage = () => {
     };
 
     try {
-      const booking = await createBooking(payload).unwrap() as BookingResponse;
+      const booking = (await createBooking(payload).unwrap()) as unknown as BookingResponse;
 
       toast.success("Booking created successfully!");
       const bookingId = booking.booking?.[0]?.bookingId;

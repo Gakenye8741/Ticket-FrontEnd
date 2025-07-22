@@ -37,7 +37,7 @@ export const venueApi = createApi({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: (result, error, { venueId }) => [
+      invalidatesTags: (_result, _error, { venueId }) => [
         { type: 'venues', id: venueId },
         { type: 'venues', id: 'LIST' },
       ],
@@ -49,7 +49,7 @@ export const venueApi = createApi({
         url: `venues/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, id) => [
+      invalidatesTags: (_result, _error, id) => [
         { type: 'venues', id },
         { type: 'venues', id: 'LIST' },
       ],

@@ -56,11 +56,12 @@ const Register = () => {
 
     try {
       const loadingToastId = toast.loading('🚀 Creating Account...');
-      const res = await registerUser(parsedData).unwrap();
+      await registerUser(parsedData).unwrap(); // ✅ Fixed: Removed unused `res`
       toast.success('✅ Account created successfully!', { id: loadingToastId });
       navigate('/login');
     } catch (error: any) {
-      const errorMessage = error?.data?.error || error?.error || '❌ Something went wrong. Please try again.';
+      const errorMessage =
+        error?.data?.error || error?.error || '❌ Something went wrong. Please try again.';
       toast.error(`🚫 Failed to register: ${errorMessage}`);
     }
   };
