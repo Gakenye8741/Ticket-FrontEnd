@@ -34,7 +34,7 @@ export const AllVenues = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredVenues = allVenues.filter((v) =>
+  const filteredVenues = allVenues.filter((v: VenueData) =>
     v.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -117,22 +117,12 @@ export const AllVenues = () => {
   ) => {
     if (venue.status === newStatus) return;
 
-    const patch = venueApi.util.updateQueryData(
-      "getAllVenues",
-      undefined,
-      (draft) => {
-        const v = draft.find((v) => v.venueId === venue.venueId);
-        if (v) v.status = newStatus;
-      }
-    );
-
     try {
       await updateVenue(
         toBackendPayload({ venueId: venue.venueId, status: newStatus })
       ).unwrap();
       refetch();
     } catch (err: any) {
-      patch.undo();
       MySwal.fire("Error", err?.data?.message || "Failed to update status.", "error");
     }
   };
@@ -211,7 +201,7 @@ export const AllVenues = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredVenues.map((venue) => (
+              {filteredVenues.map((venue: VenueData) => (
                 <tr
                   key={venue.venueId}
                   className="hover:bg-white/10 border-b border-white/10"
@@ -243,13 +233,13 @@ export const AllVenues = () => {
                       onClick={() => openVenueModal(venue)}
                       className="px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded text-white text-xs"
                     >
-                      <FaEdit/>
+                      <FaEdit />
                     </button>
                     <button
                       onClick={() => handleDelete(venue.venueId)}
                       className="px-3 py-1 bg-red-500 hover:bg-red-600 rounded text-white text-xs"
                     >
-                      <FaDeleteLeft/>
+                      <FaDeleteLeft />
                     </button>
                   </td>
                 </tr>

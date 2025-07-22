@@ -3,8 +3,9 @@ import { FaCamera, FaEdit, FaTimes } from 'react-icons/fa';
 import { useSelector } from "react-redux";
 import { useNavigate } from 'react-router-dom';
 import { useForm, type SubmitHandler } from 'react-hook-form';
-import type { RootState } from '../../app/store';
+
 import { SaveIcon } from 'lucide-react';
+import type { RootState } from '../../App/store';
 
 
 interface FormValues {
@@ -19,7 +20,7 @@ interface FormValues {
 const UserProfile = () => {
   
   const navigate = useNavigate();
-  const { user, isAuthenticated, userType } = useSelector((state: RootState) => state.auth);
+  const { user, isAuthenticated, role } = useSelector((state: RootState) => state.auth);
   const profilePicture = user?.profileUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName)}&background=4ade80&color=fff&size=128`;
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -30,10 +31,10 @@ const UserProfile = () => {
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
-    } else if (userType !== 'admin') {
+    } else if (role !== 'admin') {
       navigate('/dashboard/me');
     }
-  }, [isAuthenticated, userType, navigate]);
+  }, [isAuthenticated, role, navigate]);
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
 

@@ -1,4 +1,4 @@
-import  { useState } from "react";
+import { useState } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { PuffLoader } from "react-spinners";
@@ -9,71 +9,59 @@ import { FaDeleteLeft, FaX } from "react-icons/fa6";
 
 const MySwal = withReactContent(Swal);
 
- interface Booking {
+interface Booking {
   bookingId: number;
-  userId: number;
+  nationalId: number;
   eventId: number;
   quantity: number;
-  totalAmount: string; // Assuming it's a string from your service
+  totalAmount: string;
   bookingStatus: "Pending" | "Confirmed" | "Cancelled";
   ticketTypeId: number;
-  nationalId: number;
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
+  createdAt: string;
+  updatedAt: string;
 }
 
-// 🎨 Status helpers
 const bookingStatusEnum = ["Pending", "Confirmed", "Cancelled"] as const;
 type BookingStatus = (typeof bookingStatusEnum)[number];
 
 export const AllBookings: React.FC = () => {
-  // 📡 Queries & Mutations
-  const {
-    data: bookings = [],
-    isLoading,
-    error,
-  } = bookingApi.useGetAllBookingsQuery(undefined, {
-    pollingInterval: 30_000,
+  const { data: bookings = [], isLoading, error } = bookingApi.useGetAllBookingsQuery(undefined, {
+    pollingInterval: 30000,
   });
 
   const { data: events = [] } = eventApi.useGetAllEventsQuery(undefined);
-
   const [updateStatus] = bookingApi.useUpdateBookingStatusMutation();
   const [cancelBooking] = bookingApi.useCancelBookingMutation();
   const [deleteBooking] = bookingApi.useDeleteBookingMutation();
 
-  // Build a quick lookup: eventId → title
-  const eventMap = new Map<number, string>(events.map((e: any) => [e.eventId, e.title]));
-
-  // 🔎 Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [eventFilter, setEventFilter] = useState("");
+
+  const eventMap = new Map<number, string>(events.map((e: any) => [e.eventId, e.title]));
+
   const filteredBookings = bookings.filter((b: Booking) => {
     const eventTitle = eventMap.get(b.eventId) ?? "";
     return (
-      (searchTerm
-        ? b.bookingId.toString().includes(searchTerm) ||
-          b.nationalId.toString().includes(searchTerm)
-        : true) &&
-      (statusFilter ? b.bookingStatus === statusFilter : true) &&
-      (eventFilter ? eventTitle.toLowerCase().includes(eventFilter.toLowerCase()) : true)
+      (!searchTerm ||
+        b.bookingId.toString().includes(searchTerm) ||
+        b.nationalId.toString().includes(searchTerm)) &&
+      (!statusFilter || b.bookingStatus === statusFilter) &&
+      (!eventFilter || eventTitle.toLowerCase().includes(eventFilter.toLowerCase()))
     );
   });
 
-  // 🔧 Helpers
   const openStatusModal = async (booking: Booking) => {
     const { value: newStatus } = await MySwal.fire({
       title: `Update status for Booking #${booking.bookingId}`,
       input: "select",
-      inputOptions: bookingStatusEnum.reduce(
-        (acc, status) => ({ ...acc, [status]: status }),
-        {} as Record<string, string>
-      ),
+      inputOptions: bookingStatusEnum.reduce((acc, status) => {
+        acc[status] = status;
+        return acc;
+      }, {} as Record<string, string>),
       inputValue: booking.bookingStatus,
       showCancelButton: true,
       confirmButtonText: "Update",
-      width: "400px",
       customClass: { popup: "glass-modal" },
     });
 
@@ -96,7 +84,6 @@ export const AllBookings: React.FC = () => {
       confirmButtonColor: "#ef4444",
       cancelButtonColor: "#6b7280",
       confirmButtonText: "Yes, cancel it!",
-      customClass: { popup: "glass-modal" },
     });
 
     if (confirm.isConfirmed) {
@@ -118,7 +105,6 @@ export const AllBookings: React.FC = () => {
       confirmButtonColor: "#ef4444",
       cancelButtonColor: "#6b7280",
       confirmButtonText: "Delete",
-      customClass: { popup: "glass-modal" },
     });
 
     if (confirm.isConfirmed) {
@@ -142,7 +128,6 @@ export const AllBookings: React.FC = () => {
     );
   };
 
-  // 🖼️ UI RENDERING
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -156,13 +141,9 @@ export const AllBookings: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-cover bg-center bg-no-repeat text-white relative" style={{
-      backgroundImage:
-        "url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1950&h=1300&q=80')",
-    }}>
-      <div className="absolute inset-0 bg-black/60 z-0" />
-      <div className="relative z-10 max-w-7xl mx-auto bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+    <div className="min-h-screen bg-black text-white">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <h2 className="text-3xl font-bold text-teal-400">All Bookings</h2>
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full sm:w-auto">
             <input
@@ -195,10 +176,10 @@ export const AllBookings: React.FC = () => {
         {filteredBookings.length === 0 ? (
           <div className="text-center text-cyan-200">No bookings match your filters.</div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-md border border-white/10">
             <table className="min-w-full text-sm text-white">
               <thead>
-                <tr className="bg-white/10 text-teal-300 uppercase text-xs">
+                <tr className="bg-slate-800 text-teal-300 uppercase text-xs">
                   <th className="px-4 py-2 text-left">Booking ID</th>
                   <th className="px-4 py-2 text-left">National ID</th>
                   <th className="px-4 py-2 text-left">Event</th>
@@ -223,15 +204,15 @@ export const AllBookings: React.FC = () => {
                       <button
                         onClick={() => openStatusModal(b)}
                         className="text-xs px-2 py-1 bg-blue-600 rounded hover:bg-blue-700"
-                      ><FaEdit/></button>
+                      ><FaEdit /></button>
                       <button
                         onClick={() => handleCancel(b.bookingId)}
                         className="text-xs px-2 py-1 bg-yellow-600 rounded hover:bg-yellow-700"
-                      ><FaX/></button>
+                      ><FaX /></button>
                       <button
                         onClick={() => handleDelete(b.bookingId)}
                         className="text-xs px-2 py-1 bg-red-600 rounded hover:bg-red-700"
-                      ><FaDeleteLeft/></button>
+                      ><FaDeleteLeft /></button>
                     </td>
                   </tr>
                 ))}
