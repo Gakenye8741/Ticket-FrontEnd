@@ -15,6 +15,7 @@ import {
   UserCheck,
   Phone,
 } from "lucide-react";
+import './animate.css'
 
 export const Navbar = () => {
   const location = useLocation();
