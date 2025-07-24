@@ -7,6 +7,7 @@ import {
 import { toast } from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { Carousel } from "react-responsive-carousel";
+import { PuffLoader } from "react-spinners";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 
 import { eventApi } from "../../features/APIS/EventsApi";
@@ -32,6 +33,13 @@ type BookingResponse = {
   booking: { bookingId: number }[];
 };
 
+const formatKES = (amount: number) =>
+  new Intl.NumberFormat("en-KE", {
+    style: "currency",
+    currency: "KES",
+    minimumFractionDigits: 2,
+  }).format(amount);
+
 export const EventDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -47,15 +55,24 @@ export const EventDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [ticketTypeName, setTicketTypeName] = useState("");
 
+  const hasTicketTypes = Array.isArray(ticketTypes) && ticketTypes.length > 0;
+
   useEffect(() => {
-    if (ticketTypes && ticketTypes.length > 0) {
-      setTicketTypeName(ticketTypes[0].name);
+    if (hasTicketTypes) {
+      setTicketTypeName(ticketTypes![0].name);
+    } else {
+      setTicketTypeName("");
     }
-  }, [ticketTypes]);
+  }, [ticketTypes, hasTicketTypes]);
 
   const handleBooking = async () => {
     if (!isAuthenticated) {
       toast.error("You must be logged in to book tickets.");
+      return;
+    }
+
+    if (!hasTicketTypes) {
+      toast.error("No ticket types available.");
       return;
     }
 
@@ -72,7 +89,7 @@ export const EventDetailPage = () => {
 
     const totalAmount = quantity * Number(selectedTicket.price);
     if (totalAmount < 0.5) {
-      toast.error("Total amount must be at least $0.50.");
+      toast.error("Total amount must be at least KSh 0.50.");
       return;
     }
 
@@ -87,7 +104,6 @@ export const EventDetailPage = () => {
 
     try {
       const booking = (await createBooking(payload).unwrap()) as unknown as BookingResponse;
-
       toast.success("Booking created successfully!");
       const bookingId = booking.booking?.[0]?.bookingId;
 
@@ -100,7 +116,7 @@ export const EventDetailPage = () => {
         amount: Math.round(totalAmount * 100),
         nationalId: Number(user.nationalId),
         bookingId,
-        currency: "usd",
+        currency: "kes",
         successUrl: `${window.location.origin}/success`,
         cancelUrl: `${window.location.origin}/cancel`,
       };
@@ -119,7 +135,11 @@ export const EventDetailPage = () => {
   };
 
   if (isLoading)
-    return <p className="text-white text-center mt-10 text-xl">Loading...</p>;
+    return (
+       <div className="flex justify-center items-center min-h-screen bg-[#0f172a]">
+        <PuffLoader color="#6366f1" size={80} />
+      </div>
+    );
 
   if (error || !event)
     return <p className="text-red-500 text-center mt-10 text-xl">Event not found.</p>;
@@ -166,7 +186,7 @@ export const EventDetailPage = () => {
               <Info icon={<Calendar className="text-green-400" />} label="Date" value={event.date} />
               <Info icon={<Clock className="text-blue-400" />} label="Time" value={event.time} />
               <Info icon={<MapPin className="text-yellow-400" />} label="Venue" value={event.venue?.name ?? "Unknown"} />
-              <Info icon={<DollarSign className="text-purple-400" />} label="Base Price" value={`$${event.ticketPrice}`} />
+              <Info icon={<DollarSign className="text-purple-400" />} label="Base Price" value={`KSh ${event.ticketPrice}`} />
               <Info icon={event.status === "Active" ? <CheckCircle className="text-emerald-400" /> : <XCircle className="text-rose-400" />} label="Status" value={event.status} />
             </div>
 
@@ -191,34 +211,40 @@ export const EventDetailPage = () => {
                   disabled={!isAuthenticated}
                 />
 
-                <select
-                  className="select select-bordered w-full bg-[#111827] text-white"
-                  value={ticketTypeName}
-                  onChange={(e) => setTicketTypeName(e.target.value)}
-                  disabled={!isAuthenticated}
-                >
-                  {ticketTypes?.map((type: any) => (
-                    <option key={type.id} value={type.name}>
-                      {type.name} - ${type.price}
-                    </option>
-                  ))}
-                </select>
+                {hasTicketTypes ? (
+                  <select
+                    className="select select-bordered w-full bg-[#111827] text-white"
+                    value={ticketTypeName}
+                    onChange={(e) => setTicketTypeName(e.target.value)}
+                    disabled={!isAuthenticated}
+                  >
+                    {ticketTypes!.map((type: any) => (
+                      <option key={type.id} value={type.name}>
+                        {type.name} - {formatKES(type.price)}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-sm text-gray-400 bg-[#111827] p-4 rounded-lg border border-gray-600">
+                    No ticket types available.
+                  </p>
+                )}
 
-                {ticketTypes && ticketTypes.length > 0 && (
+                {hasTicketTypes && (
                   <div className="text-sm text-gray-300 bg-[#111827] p-4 rounded-lg border border-gray-600 space-y-2">
-                    <p>💵 <strong>Ticket:</strong> ${ticketPrice}</p>
+                    <p>💵 <strong>Ticket:</strong> {formatKES(ticketPrice)}</p>
                     <p>#️⃣ <strong>Quantity:</strong> {quantity}</p>
-                    <p>🧮 <strong>Total:</strong> ${total.toFixed(2)}</p>
+                    <p>🧮 <strong>Total:</strong> {formatKES(total)}</p>
                   </div>
                 )}
 
                 <button
                   onClick={handleBooking}
-                  className="btn btn-primary w-full flex items-center justify-center gap-2"
-                  disabled={isBooking}
+                  className="btn btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50"
+                  disabled={isBooking || !hasTicketTypes}
                 >
                   <ShoppingCart size={18} />
-                  {isBooking ? "Processing..." : "Book & Pay Now"}
+                  {!hasTicketTypes ? "No ticket types available" : isBooking ? "Processing..." : "Book & Pay Now"}
                 </button>
               </div>
             </div>
