@@ -123,7 +123,7 @@ const AllMedia: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 bg-cover  p-6  bg-gray-900 text-white " >
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold text-white">📸 All Media</h2>
         <button

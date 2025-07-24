@@ -204,14 +204,8 @@ export const EventDetailsPage = () => {
   };
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat text-white relative"
-      style={{
-        backgroundImage:
-          "url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1950&h=1300&q=80')",
-      }}
-    >
-      <div className="absolute inset-0 bg-black/60 z-0" />
+    <div className="bg-cover  p-6  bg-gray-900 text-white "    >
+      <div className="" />
       <div className="relative z-10 max-w-7xl mx-auto bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
           <h2 className="text-3xl font-bold text-teal-400">All Events</h2>
