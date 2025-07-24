@@ -141,8 +141,8 @@ export const AllBookings: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-cover  p-6  bg-gray-900 text-white ">
+      <div className="w-full max-w-7xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl rounded-xl p-6 overflow-x-auto glow-effect">
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <h2 className="text-3xl font-bold text-teal-400">All Bookings</h2>
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full sm:w-auto">
