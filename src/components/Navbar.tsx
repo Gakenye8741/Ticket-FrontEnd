@@ -192,7 +192,7 @@ export const Navbar = () => {
       </div>
 
       {/* Bottom Navbar for Mobile */}
-      <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 bg-base-100 shadow-md border-t">
+      <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 backdrop-blur bg-base-100/40 shadow-md border-t animate-glow">
         <ul className="flex justify-around items-center py-2">
           <li>
             <Link to="/" className={`flex flex-col items-center ${isActive("/")}`}>
