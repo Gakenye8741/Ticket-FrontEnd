@@ -1,11 +1,11 @@
-import { User, LogOut } from "lucide-react";
-import { FaDollarSign } from "react-icons/fa";
+import { User, LogOut, CreditCard, Ticket } from "lucide-react";
+
 import { RiShoppingCart2Line } from "react-icons/ri";
 import { Link } from "react-router-dom";
 
 export const SideNav = ({ onNavItemClick }: { onNavItemClick?: () => void }) => {
   return (
-    <ul className="menu bg-gray-900 text-white shadow-lg min-w-full gap-2 text-base-content min-h-full p-4">
+    <ul className="mt-15 menu bg-gray-900 text-white shadow-lg min-w-full gap-2 text-base-content min-h-full p-4">
       <li>
         <Link
           to="me"
@@ -32,7 +32,7 @@ export const SideNav = ({ onNavItemClick }: { onNavItemClick?: () => void }) => 
           onClick={onNavItemClick}
           className="flex items-center gap-3 p-3 rounded-lg hover:bg-green-600 transition duration-300"
         >
-          <FaDollarSign className="text-green-400" />
+          <CreditCard className="text-yellow-400" />
           Payments
         </Link>
       </li>
@@ -42,7 +42,7 @@ export const SideNav = ({ onNavItemClick }: { onNavItemClick?: () => void }) => 
           onClick={onNavItemClick}
           className="flex items-center gap-3 p-3 rounded-lg hover:bg-green-600 transition duration-300"
         >
-          <FaDollarSign className="text-green-400" />
+          <Ticket className="text-green-400" />
           Support Tickets
         </Link>
       </li>

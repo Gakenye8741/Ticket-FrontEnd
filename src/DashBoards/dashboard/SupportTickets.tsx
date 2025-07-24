@@ -12,6 +12,7 @@ import {
   useDeleteSupportTicketMutation,
 } from '../../features/APIS/supportTicketsApi';
 import { adminResponseApi } from '../../features/APIS/AdminReponse';
+import { PuffLoader } from 'react-spinners';
 
 interface SupportTicket {
   ticketId: number;
@@ -147,9 +148,9 @@ const UserSupportTickets = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className="max-w-6xl mx-auto px-4 py-6 mt-15" >
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Support Tickets</h1>
+        <h1 className="text-3xl font-bold text-gray-100 underline">Support Tickets</h1>
         <button
           onClick={() => setIsModalOpen(true)}
           className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow-md hover:opacity-90 transition"
@@ -159,7 +160,10 @@ const UserSupportTickets = () => {
       </div>
 
       {isLoading ? (
-        <p className="text-gray-600">Loading tickets...</p>
+        <p className="flex justify-center items-center min-h-screen">
+           <PuffLoader />
+         </p>
+
       ) : tickets.length === 0 ? (
         <p className="text-gray-600">No tickets found.</p>
       ) : (

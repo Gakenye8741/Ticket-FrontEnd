@@ -73,7 +73,7 @@ const GetPaymentsByNationalId: React.FC = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="max-w-6xl mx-auto p-6 rounded-2xl shadow-lg backdrop-blur-md bg-white/30 border border-white/20 overflow-x-auto"
+      className="max-w-6xl mx-auto p-6 rounded-2xl shadow-lg backdrop-blur-md bg-red-100 border border-white/20 overflow-x-auto mt-16"
     >
       <h2 className="text-2xl font-bold mb-6 text-center text-slate-800">💳 My Payments</h2>
 

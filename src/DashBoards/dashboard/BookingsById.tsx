@@ -205,7 +205,7 @@ const BookingsByNationalId: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat text-white relative animate-fadeIn"
+      className="min-h-screen bg-cover bg-center bg-no-repeat text-white relative animate-fadeIn mt-15"
       style={{
         backgroundImage:
           "url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1950&h=1300&q=80')",
