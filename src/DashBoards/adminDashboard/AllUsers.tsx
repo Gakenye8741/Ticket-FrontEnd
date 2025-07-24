@@ -205,15 +205,11 @@ export const AllUsers = () => {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center p-6"
-      style={{
-        backgroundImage:
-          "url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1950&q=80')",
-      }}
+      className="min-h-screen bg-cover  p-6  bg-gray-900 text-white "      
     >
-      <div className="w-full max-w-7xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl rounded-xl p-6 overflow-x-auto">
+      <div className="w-full max-w-7xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl rounded-xl p-6 overflow-x-auto glow-effect">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-          <h2 className="text-3xl font-bold text-orange-400">All Users</h2>
+          <h2 className="text-3xl font-bold text-orange-400 glow-text">All Users</h2>
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <input
               type="text"
@@ -224,7 +220,7 @@ export const AllUsers = () => {
             />
             <button
               onClick={handleAddUser}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded glow-button"
             >
               ➕ Add User
             </button>
@@ -282,15 +278,15 @@ export const AllUsers = () => {
                     <td className="px-4 py-2 space-x-2">
                       <button
                         onClick={() => handleEdit(user)}
-                        className="px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded text-white text-xs"
+                        className="px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded text-white text-xs glow-button"
                       >
-                        <FaEdit/>
+                        <FaEdit />
                       </button>
                       <button
                         onClick={() => handleDelete(user.nationalId)}
-                        className="px-3 py-1 bg-red-500 hover:bg-red-600 rounded text-white text-xs"
+                        className="px-3 py-1 bg-red-500 hover:bg-red-600 rounded text-white text-xs glow-button"
                       >
-                        <FaDeleteLeft/>
+                        <FaDeleteLeft />
                       </button>
                     </td>
                   </tr>
@@ -302,7 +298,7 @@ export const AllUsers = () => {
               <div className="flex justify-center mt-4">
                 <button
                   onClick={() => setVisibleCount((prev) => prev + 10)}
-                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded"
+                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded glow-button"
                 >
                   Load More
                 </button>

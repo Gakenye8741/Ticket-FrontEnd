@@ -38,6 +38,8 @@ export const AdminSideNav = ({ onNavItemClick }: { onNavItemClick?: () => void }
 
   return (
     <aside className="h-full w-full p-4 bg-gray-900 text-white space-y-2 overflow-y-auto mt-15">
+
+      <h2 className="underline mt-5 flex align-middle justify-center">Admin Side NavBar</h2>
       {navItems.map((item, index) =>
         item.name === "Logout" ? (
           <button
