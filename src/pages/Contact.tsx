@@ -5,7 +5,7 @@ import { FaInstagram, FaLinkedin, FaTwitter, FaGithub } from "react-icons/fa";
 import SplashCursor from "../animations/SplashCursor";
 import { Navbar } from "../components/Navbar";
 
-// ✅ Replace with your actual EmailJS credentials
+// EmailJS Credentials
 const SERVICE_ID = "service_36rahuf";
 const TEMPLATE_ID = "template_t7k2dxh";
 const PUBLIC_KEY = "mSrGC2dXclojT6ci1";
@@ -38,40 +38,22 @@ const ContactSection: React.FC = () => {
       <SplashCursor />
       <Navbar />
 
-      <section
-        style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1581091215367-59c71a18f115?auto=format&fit=crop&w=1740&q=80')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          minHeight: "100vh",
-          padding: "4rem 1rem",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <section className="min-h-screen flex items-center justify-center bg-base-100 text-base-content px-4 py-16">
         <Toaster position="top-right" />
-        <div style={containerStyle}>
-          {/* Left: Info */}
-          <div style={leftSectionStyle}>
-            <h2 style={{ fontSize: "2rem", marginBottom: "1rem" }}>
-              🎫 Manage Support Like a Pro
-            </h2>
-            <p style={{ lineHeight: "1.6", marginBottom: "1rem" }}>
-              Our <strong>Ticket Stream Management System</strong> helps you track, manage, and resolve issues in real time.
+        <div className="w-full max-w-6xl rounded-2xl shadow-xl border border-base-300 p-6 md:p-10 grid grid-cols-1 md:grid-cols-2 gap-10 bg-base-100">
+          {/* Left Info */}
+          <div>
+            <h2 className="text-3xl font-bold mb-4">🎫 Manage Support Like a Pro</h2>
+            <p className="mb-3 leading-relaxed">
+              Our <span className="font-semibold">Ticket Stream Management System</span> helps you track, manage, and resolve issues in real time.
             </p>
-            <p style={{ marginBottom: "1rem" }}>
-              Boost productivity. Improve response time. Keep customers happy.
-            </p>
+            <p className="mb-6">Boost productivity. Improve response time. Keep customers happy.</p>
             <img
               src="https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?auto=format&fit=crop&w=800&q=80"
               alt="Product"
-              style={imageStyle}
+              className="rounded-xl mb-6 shadow-md"
             />
-
-            {/* Social Icons */}
-            <div style={socialIconRow}>
+            <div className="flex gap-4 text-xl">
               <SocialLink href="https://instagram.com"><FaInstagram /></SocialLink>
               <SocialLink href="https://twitter.com"><FaTwitter /></SocialLink>
               <SocialLink href="https://linkedin.com"><FaLinkedin /></SocialLink>
@@ -79,15 +61,30 @@ const ContactSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: Form */}
-          <form ref={formRef} onSubmit={sendEmail} style={formStyle}>
-            <h3 style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>
-              Contact Us
-            </h3>
-            <input name="from_name" placeholder="Your Name" required style={inputStyle} />
-            <input name="from_email" type="email" placeholder="Your Email" required style={inputStyle} />
-            <textarea name="message" placeholder="Your Message" rows={6} required style={inputStyle} />
-            <button type="submit" style={buttonStyle}>
+          {/* Contact Form */}
+          <form ref={formRef} onSubmit={sendEmail} className="flex flex-col gap-4">
+            <h3 className="text-2xl font-bold mb-2">Contact Us</h3>
+            <input
+              name="from_name"
+              type="text"
+              placeholder="Your Name"
+              className="input input-bordered w-full"
+              required
+            />
+            <input
+              name="from_email"
+              type="email"
+              placeholder="Your Email"
+              className="input input-bordered w-full"
+              required
+            />
+            <textarea
+              name="message"
+              placeholder="Your Message"
+              className="textarea textarea-bordered w-full h-32"
+              required
+            />
+            <button type="submit" className="btn btn-primary w-full">
               📩 Send Message
             </button>
           </form>
@@ -97,95 +94,16 @@ const ContactSection: React.FC = () => {
   );
 };
 
-// ✅ Reusable Social Link component
+// Reusable Social Link
 const SocialLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
   <a
     href={href}
     target="_blank"
     rel="noopener noreferrer"
-    style={iconStyle}
+    className="hover:text-primary transition-colors"
   >
     {children}
   </a>
 );
-
-// 🔧 Styles
-const containerStyle: React.CSSProperties = {
-  backdropFilter: "blur(16px)",
-  background: "rgba(255, 255, 255, 0.1)",
-  borderRadius: "20px",
-  padding: "2rem",
-  maxWidth: "1100px",
-  width: "100%",
-  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
-  border: "1px solid rgba(255, 255, 255, 0.2)",
-  color: "#fff",
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "2rem",
-  flexWrap: "wrap",
-  overflow: "hidden",
-
-  // Mobile responsive
-  // Overridden by media query below
-} as React.CSSProperties;
-
-// Responsive override via media query
-if (typeof window !== "undefined" && window.innerWidth < 768) {
-  containerStyle.gridTemplateColumns = "1fr";
-}
-
-const leftSectionStyle: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-};
-
-const formStyle: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "1rem",
-};
-
-const inputStyle: React.CSSProperties = {
-  padding: "0.8rem",
-  borderRadius: "8px",
-  border: "none",
-  fontSize: "1rem",
-  backgroundColor: "rgba(255, 255, 255, 0.2)",
-  color: "#fff",
-  backdropFilter: "blur(4px)",
-  outline: "none",
-  width: "100%",
-};
-
-const buttonStyle: React.CSSProperties = {
-  padding: "0.8rem",
-  backgroundColor: "#0d6efd",
-  color: "#fff",
-  border: "none",
-  borderRadius: "8px",
-  fontSize: "1rem",
-  cursor: "pointer",
-  fontWeight: "bold",
-  transition: "background 0.3s",
-};
-
-const imageStyle: React.CSSProperties = {
-  width: "100%",
-  borderRadius: "12px",
-  marginBottom: "1.5rem",
-  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
-};
-
-const socialIconRow: React.CSSProperties = {
-  display: "flex",
-  gap: "1rem",
-};
-
-const iconStyle: React.CSSProperties = {
-  color: "#fff",
-  fontSize: "1.5rem",
-  transition: "color 0.3s",
-};
 
 export default ContactSection;

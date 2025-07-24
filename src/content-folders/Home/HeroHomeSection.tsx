@@ -29,10 +29,6 @@ function App() {
     error,
   } = eventApi.useGetAllEventsQuery(undefined);
 
-  /**
-   * Utility — safely extract an ISO‐parsable date from the event regardless of the backend key name.
-   * Falls back to Unix epoch (Jan 1 1970) if the value is missing or invalid so the event is treated as past.
-   */
   const getEventDate = (e: any): Date => {
     const dateLike: string | number | undefined =
       e.date ?? e.startDate ?? e.eventDate ?? e.event_date ?? e.start_date;
@@ -40,49 +36,35 @@ function App() {
     return isNaN(d.valueOf()) ? new Date(0) : d;
   };
 
-  /**
-   * Memoised list of events that:
-   *   1. Are TODAY or in the FUTURE (date >= now);
-   *   2. Match the search query (case‐insensitive title match);
-   *   3. Sorted by soonest upcoming first;
-   *   4. Limited to the latest 5 items.
-   */
   const filteredEvents = useMemo(() => {
     const now = new Date();
     return (
       events
-        // 1. exclude past events
         .filter((evt: any) => getEventDate(evt) >= now)
-        // 2. match search if provided
         .filter((evt: any) =>
           search.trim()
             ? evt.title?.toLowerCase().includes(search.toLowerCase())
             : true
         )
-        // 3. sort by date ascending (soonest first)
         .sort(
           (a: any, b: any) => getEventDate(a).getTime() - getEventDate(b).getTime()
         )
-        // 4. take only the latest 5
         .slice(0, 5)
     );
   }, [events, search]);
 
   const hasSearch = search.trim().length > 0;
 
-  // Util to get correct ID irrespective of backend naming (id, eventId, _id)
   const getEventId = (e: any) => e.eventId ?? e.id ?? e._id;
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] overflow-hidden">
-      {/* Background image */}
+    <div className="relative min-h-screen flex items-center justify-center bg-base-100 text-base-content overflow-hidden">
       <div
-        className="absolute inset-0 bg-cover bg-center opacity-20"
+        className="absolute inset-0 bg-cover bg-center opacity-10 dark:opacity-20"
         style={{ backgroundImage: `url(${backgroundImage})` }}
       />
 
-      {/* Glass overlay */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-md z-10" />
+      <div className="absolute inset-0 bg-base-100/60 backdrop-blur z-10" />
 
       <div className="relative z-20 text-center px-6">
         <TrueFocus
@@ -94,13 +76,12 @@ function App() {
           pauseBetweenAnimations={2}
         />
 
-        <div className="mt-12 bg-white/10 backdrop-blur-xl rounded-2xl p-8 shadow-lg border border-white/20 max-w-6xl mx-auto flex flex-col md:flex-row gap-8">
-          {/* Left Side */}
-          <div className="flex-1 text-white text-left">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-cyan-300 mb-6 drop-shadow">
+        <div className="mt-12 bg-base-200/80 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-base-300 max-w-6xl mx-auto flex flex-col md:flex-row gap-8">
+          <div className="flex-1 text-left">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-primary mb-6">
               {greeting}, {firstName}
             </h1>
-            <p className="text-gray-300 mb-6 leading-relaxed">
+            <p className="mb-6 leading-relaxed">
               Welcome to <span className="text-accent font-semibold">TicketStream 🎫</span> — your ultimate platform for effortless event and ticketing management.
               <br />
               <br />
@@ -108,38 +89,36 @@ function App() {
             </p>
             <Link
               to="/events"
-              className="btn bg-cyan-500 hover:bg-cyan-400 text-white font-bold py-2 px-6 rounded-xl shadow-lg transition"
+              className="btn btn-primary font-bold py-2 px-6 rounded-xl shadow transition"
             >
               Get Started
             </Link>
           </div>
 
-          {/* Right Side: Search */}
-          <div className="flex-1 text-white">
+          <div className="flex-1">
             <input
               type="text"
               placeholder="Search events by title..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full mb-4 px-4 py-2 rounded-lg shadow-md border border-white/20 bg-white/20 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              className="input input-bordered w-full mb-4 text-base-content"
             />
 
-            {isLoading && <p className="text-cyan-300">Loading events...</p>}
+            {isLoading && <p className="text-primary">Loading events...</p>}
             {isError && (
-              <p className="text-red-300">
+              <p className="text-error">
                 {(error as { status?: string })?.status || 'Failed to load events'}
               </p>
             )}
 
-            {/* Inform user when events have been found */}
             {!isLoading && hasSearch && filteredEvents.length > 0 && (
               <>
-                <p className="text-green-300 mb-2">
-                  Showing {filteredEvents.length} of the latest upcoming event{filteredEvents.length > 1 ? 's' : ''} matching “{search}”.
+                <p className="text-success mb-2">
+                  Showing {filteredEvents.length} matching upcoming event{filteredEvents.length > 1 ? 's' : ''} for “{search}”.
                 </p>
                 <Link
                   to="/events"
-                  className="inline-block mb-4 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold py-2 px-6 rounded-xl shadow transition"
+                  className="btn btn-accent mb-4"
                 >
                   View All Events
                 </Link>
@@ -147,17 +126,17 @@ function App() {
             )}
 
             {!isLoading && hasSearch && filteredEvents.length === 0 && (
-              <p className="text-red-200">No matching upcoming events found.</p>
+              <p className="text-error">No matching upcoming events found.</p>
             )}
 
             {!isLoading && filteredEvents.length > 0 && (
-              <ul className="space-y-2 max-h-60 overflow-y-auto pr-2 text-left">
+              <ul className="space-y-2 max-h-60 overflow-y-auto pr-2">
                 {filteredEvents.map((evt: any) => (
                   <li
                     key={getEventId(evt)}
-                    className="bg-cyan-700/30 px-4 py-2 rounded-md hover:bg-cyan-600/40 transition"
+                    className="bg-base-300/50 px-4 py-2 rounded hover:bg-base-300 transition"
                   >
-                    <Link to={`/events/${getEventId(evt)}`} className="block w-full">
+                    <Link to={`/events/${getEventId(evt)}`} className="block">
                       {evt.title}
                     </Link>
                   </li>
