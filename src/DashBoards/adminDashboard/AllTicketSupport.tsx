@@ -160,7 +160,7 @@ const AdminSupportTickets = () => {
   const totalPages = Math.ceil(filteredTickets.length / ITEMS_PER_PAGE);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
+    <div className="max-w-7xl mx-auto px-4 py-10 bg-cover  p-6  bg-gray-900 text-white ">
       <h1 className="text-4xl font-bold text-gray-900 mb-8">Admin - Support Tickets</h1>
 
       {/* Dashboard Stats */}
