@@ -5,6 +5,8 @@ import { PuffLoader } from "react-spinners";
 import { venueApi } from "../../features/APIS/VenueApi";
 import { FaEdit } from "react-icons/fa";
 import { FaDeleteLeft } from "react-icons/fa6";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../App/store";
 
 const MySwal = withReactContent(Swal);
 
@@ -31,6 +33,7 @@ export const AllVenues = () => {
   const [createVenue] = venueApi.useCreateVenueMutation();
   const [updateVenue] = venueApi.useUpdateVenueMutation();
   const [deleteVenue] = venueApi.useDeleteVenueMutation();
+  const firstName = useSelector((state:RootState)=>state.auth.user?.firstName)
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -47,22 +50,12 @@ export const AllVenues = () => {
     const { value } = await MySwal.fire({
       title: initial ? "Edit Venue" : "Add New Venue",
       html: `
-        <input id="venue-name" class="swal2-input" placeholder="Venue Name" value="${
-          initial?.name ?? ""
-        }" />
-        <input id="venue-address" class="swal2-input" placeholder="Address" value="${
-          initial?.address ?? ""
-        }" />
-        <input id="venue-capacity" class="swal2-input" type="number" placeholder="Capacity" value="${
-          initial?.capacity ?? ""
-        }" />
+        <input id="venue-name" class="swal2-input" placeholder="Venue Name" value="${initial?.name ?? ""}" />
+        <input id="venue-address" class="swal2-input" placeholder="Address" value="${initial?.address ?? ""}" />
+        <input id="venue-capacity" class="swal2-input" type="number" placeholder="Capacity" value="${initial?.capacity ?? ""}" />
         <select id="venue-status" class="swal2-input">
-          <option value="available" ${
-            initial?.status === "available" ? "selected" : ""
-          }>✅ Available</option>
-          <option value="booked" ${
-            initial?.status === "booked" ? "selected" : ""
-          }>📌 Booked</option>
+          <option value="available" ${initial?.status === "available" ? "selected" : ""}>✅ Available</option>
+          <option value="booked" ${initial?.status === "booked" ? "selected" : ""}>📌 Booked</option>
         </select>
       `,
       showCancelButton: true,
@@ -72,24 +65,15 @@ export const AllVenues = () => {
       preConfirm: () => {
         const name = (document.getElementById("venue-name") as HTMLInputElement).value.trim();
         const address = (document.getElementById("venue-address") as HTMLInputElement).value.trim();
-        const capacity = Number(
-          (document.getElementById("venue-capacity") as HTMLInputElement).value
-        );
-        const status = (
-          (document.getElementById("venue-status") as HTMLSelectElement).value || "available"
-        ) as "available" | "booked";
+        const capacity = Number((document.getElementById("venue-capacity") as HTMLInputElement).value);
+        const status = ((document.getElementById("venue-status") as HTMLSelectElement).value || "available") as "available" | "booked";
 
         if (!name || !address || !capacity) {
           Swal.showValidationMessage("All fields are required.");
           return;
         }
 
-        const payload: Partial<VenueData> = {
-          name,
-          address,
-          capacity,
-          status,
-        };
+        const payload: Partial<VenueData> = { name, address, capacity, status };
         if (initial) payload.venueId = initial.venueId;
         return payload;
       },
@@ -111,16 +95,11 @@ export const AllVenues = () => {
     }
   };
 
-  const handleStatusChange = async (
-    venue: VenueData,
-    newStatus: "available" | "booked"
-  ) => {
+  const handleStatusChange = async (venue: VenueData, newStatus: "available" | "booked") => {
     if (venue.status === newStatus) return;
 
     try {
-      await updateVenue(
-        toBackendPayload({ venueId: venue.venueId, status: newStatus })
-      ).unwrap();
+      await updateVenue(toBackendPayload({ venueId: venue.venueId, status: newStatus })).unwrap();
       refetch();
     } catch (err: any) {
       MySwal.fire("Error", err?.data?.message || "Failed to update status.", "error");
@@ -151,31 +130,29 @@ export const AllVenues = () => {
   };
 
   return (
-    <div
-      className="min-h-screen bg-cover  p-6  bg-gray-900 text-white "
-    >
-      <div className="w-full max-w-6xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl rounded-xl p-6 overflow-x-auto">
+    <div className="min-h-screen p-6 bg-base-100 text-base-content">
+      <div className="mb-6 text-xl sm:text-2xl font-semibold text-primary">
+        👋 Hey {firstName}, welcome!
+      </div>
+      <div className="w-full max-w-6xl mx-auto bg-base-200 rounded-xl border border-base-300 shadow-lg p-6 overflow-x-auto">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-          <h2 className="text-3xl font-bold text-orange-400">All Venues</h2>
+          <h2 className="text-3xl font-bold text-primary">All Venues</h2>
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <input
               type="text"
               placeholder="Search by venue name"
-              className="px-4 py-2 w-full sm:w-64 rounded-md bg-white/20 text-white placeholder-white/70 focus:outline-none focus:ring focus:ring-cyan-300"
+              className="input input-bordered w-full sm:w-64"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <button
-              onClick={() => openVenueModal()}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
-            >
+            <button onClick={() => openVenueModal()} className="btn btn-success">
               ➕ Add Venue
             </button>
           </div>
         </div>
 
         {error ? (
-          <div className="text-red-400 text-center text-lg font-semibold">
+          <div className="text-error text-center text-lg font-semibold">
             Something went wrong. Please try again.
           </div>
         ) : isLoading ? (
@@ -183,58 +160,43 @@ export const AllVenues = () => {
             <PuffLoader color="#22d3ee" />
           </div>
         ) : filteredVenues.length === 0 ? (
-          <div className="text-center text-cyan-200 text-lg">No venues found.</div>
+          <div className="text-center text-info text-lg">No venues found.</div>
         ) : (
-          <table className="min-w-full text-sm text-white">
+          <table className="table table-zebra text-sm">
             <thead>
-              <tr className="bg-white/20 text-orange-300 uppercase text-xs tracking-wider">
-                <th className="px-4 py-3 text-left">Name</th>
-                <th className="px-4 py-3 text-left">Address</th>
-                <th className="px-4 py-3 text-left">Capacity</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Created At</th>
-                <th className="px-4 py-3 text-left">Actions</th>
+              <tr className="text-primary-content bg-primary text-xs uppercase">
+                <th>Name</th>
+                <th>Address</th>
+                <th>Capacity</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredVenues.map((venue: VenueData) => (
-                <tr
-                  key={venue.venueId}
-                  className="hover:bg-white/10 border-b border-white/10"
-                >
-                  <td className="px-4 py-2">{venue.name}</td>
-                  <td className="px-4 py-2">{venue.address}</td>
-                  <td className="px-4 py-2">{venue.capacity}</td>
-                  <td className="px-4 py-2">
+              {filteredVenues.map((venue:VenueData) => (
+                <tr key={venue.venueId}>
+                  <td>{venue.name}</td>
+                  <td>{venue.address}</td>
+                  <td>{venue.capacity}</td>
+                  <td>
                     <select
-                      className={`rounded px-2 py-1 text-xs font-semibold ${
-                        venue.status === "available"
-                          ? "bg-green-500 text-white"
-                          : "bg-yellow-500 text-white"
+                      className={`select select-xs ${
+                        venue.status === "available" ? "bg-green-500 text-white" : "bg-yellow-500 text-white"
                       }`}
                       value={venue.status}
-                      onChange={(e) =>
-                        handleStatusChange(venue, e.target.value as "available" | "booked")
-                      }
+                      onChange={(e) => handleStatusChange(venue, e.target.value as "available" | "booked")}
                     >
                       <option value="available">✅ Available</option>
                       <option value="booked">📌 Booked</option>
                     </select>
                   </td>
-                  <td className="px-4 py-2">
-                    {new Date(venue.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-2 space-x-2">
-                    <button
-                      onClick={() => openVenueModal(venue)}
-                      className="px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded text-white text-xs"
-                    >
+                  <td>{new Date(venue.createdAt).toLocaleDateString()}</td>
+                  <td className="space-x-2">
+                    <button onClick={() => openVenueModal(venue)} className="btn btn-xs btn-info">
                       <FaEdit />
                     </button>
-                    <button
-                      onClick={() => handleDelete(venue.venueId)}
-                      className="px-3 py-1 bg-red-500 hover:bg-red-600 rounded text-white text-xs"
-                    >
+                    <button onClick={() => handleDelete(venue.venueId)} className="btn btn-xs btn-error">
                       <FaDeleteLeft />
                     </button>
                   </td>

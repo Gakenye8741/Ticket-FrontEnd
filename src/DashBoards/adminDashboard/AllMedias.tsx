@@ -8,6 +8,8 @@ import {
   useDeleteMediaMutation,
 } from '../../features/APIS/mediaApi';
 import { eventApi } from '../../features/APIS/EventsApi';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../App/store';
 
 interface Event {
   eventId: number;
@@ -37,6 +39,7 @@ const AllMedia: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const firstName = useSelector((state:RootState)=>state.auth.user.firstName)
 
   const handleCreateMedia = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,12 +126,15 @@ const AllMedia: React.FC = () => {
   };
 
   return (
-    <div className="p-4 bg-cover  p-6  bg-gray-900 text-white " >
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold text-white">📸 All Media</h2>
+    <div className="min-h-screen p-6 bg-base-100 text-base-content">
+       <div className="mb-6 text-xl sm:text-2xl font-semibold text-primary">
+        👋 Hey {firstName}, welcome!
+      </div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold text-primary">📸 All Media</h2>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2"
+          className="btn btn-success flex items-center gap-2"
         >
           <Plus size={18} />
           Add Media
@@ -136,15 +142,15 @@ const AllMedia: React.FC = () => {
       </div>
 
       {isLoading ? (
-        <p className="text-gray-300">Loading media...</p>
+        <p className="text-info">Loading media...</p>
       ) : isError ? (
-        <p className="text-red-600">❌ Failed to load media.</p>
+        <p className="text-error">❌ Failed to load media.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {mediaList?.map((media: Media) => (
             <div
               key={media.mediaId}
-              className="bg-blue-950/60 backdrop-blur-md border border-blue-800 rounded-xl shadow p-4 text-white flex flex-col justify-between"
+              className="bg-base-200 border border-base-300 rounded-xl shadow p-4"
             >
               {media.type === 'image' ? (
                 <img
@@ -159,31 +165,28 @@ const AllMedia: React.FC = () => {
                 </video>
               )}
 
-              <div className="mt-3 text-sm leading-relaxed space-y-1">
+              <div className="mt-3 text-sm space-y-1">
                 <p>
-                  <span className="font-semibold text-white">📽️ Type:</span>{' '}
-                  <span className="capitalize text-amber-300">{media.type}</span>
+                  <span className="font-semibold text-base-content">📽️ Type:</span>{' '}
+                  <span className="capitalize text-warning">{media.type}</span>
                 </p>
                 <p>
-                  <span className="font-semibold text-white">🎟️ Event:</span>{' '}
-                  <span className="text-cyan-300">{getEventName(media.eventId)}</span>
+                  <span className="font-semibold text-base-content">🎟️ Event:</span>{' '}
+                  <span className="text-info">{getEventName(media.eventId)}</span>
                 </p>
                 <p>
-                  <span className="font-semibold text-white">⏰ Uploaded:</span>{' '}
-                  <span className="text-gray-400">{formatDate(media.uploadedAt)}</span>
+                  <span className="font-semibold text-base-content">⏰ Uploaded:</span>{' '}
+                  <span className="text-sm text-base-content/70">{formatDate(media.uploadedAt)}</span>
                 </p>
               </div>
 
               <div className="mt-4 flex justify-end space-x-2">
-                <button
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded"
-                  title="Edit (Not implemented)"
-                >
+                <button className="btn btn-warning btn-sm" title="Edit (Not implemented)">
                   <Pencil size={16} />
                 </button>
                 <button
-                  className="bg-red-600 hover:bg-red-700 text-white p-2 rounded"
                   onClick={() => handleDelete(media.mediaId)}
+                  className="btn btn-error btn-sm"
                   title="Delete"
                 >
                   <Trash2 size={16} />
@@ -197,30 +200,26 @@ const AllMedia: React.FC = () => {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-white/10 border border-white/20 backdrop-blur-md text-white w-full max-w-lg rounded-xl p-6 relative shadow-lg">
+          <div className="bg-base-200 border border-base-300 rounded-xl shadow-lg w-full max-w-lg p-6 relative">
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-2 right-3 text-white hover:text-red-400"
+              className="absolute top-2 right-3 text-error hover:scale-110 transition"
             >
               ✖
             </button>
 
-            <h3 className="text-xl font-semibold mb-4">Upload New Media</h3>
+            <h3 className="text-xl font-semibold mb-4 text-primary">Upload New Media</h3>
 
             <form onSubmit={handleCreateMedia} className="space-y-4">
               <select
                 value={eventId}
                 onChange={(e) => setEventId(e.target.value)}
-                className="w-full bg-transparent border p-2 rounded text-white"
+                className="select select-bordered w-full"
                 required
               >
                 <option value="">Select Event</option>
                 {events.map((event: Event) => (
-                  <option
-                    key={event.eventId}
-                    value={event.eventId}
-                    className="text-black"
-                  >
+                  <option key={event.eventId} value={event.eventId}>
                     {event.title}
                   </option>
                 ))}
@@ -229,7 +228,7 @@ const AllMedia: React.FC = () => {
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as 'image' | 'video')}
-                className="w-full bg-transparent border p-2 rounded text-white"
+                className="select select-bordered w-full"
                 required
               >
                 <option value="image">Image</option>
@@ -240,25 +239,24 @@ const AllMedia: React.FC = () => {
                 type="file"
                 accept={type === 'image' ? 'image/*' : 'video/*'}
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className="w-full file:mr-2 file:py-2 file:px-4 file:rounded file:border-none file:bg-blue-600 file:text-white"
+                className="file-input file-input-bordered w-full"
                 required
               />
 
               {uploadProgress > 0 && (
-                <div className="w-full bg-gray-200 rounded h-4">
-                  <div
-                    className="bg-blue-600 h-4 rounded text-xs text-white text-center"
-                    style={{ width: `${uploadProgress}%` }}
-                  >
-                    {uploadProgress}%
-                  </div>
-                </div>
+                <progress
+                  className="progress progress-info w-full"
+                  value={uploadProgress}
+                  max={100}
+                >
+                  {uploadProgress}%
+                </progress>
               )}
 
               <button
                 type="submit"
                 disabled={isCreating}
-                className="w-full bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded"
+                className="btn btn-primary w-full"
               >
                 {isCreating ? 'Uploading...' : 'Upload Media'}
               </button>
