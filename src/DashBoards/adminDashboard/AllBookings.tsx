@@ -6,6 +6,8 @@ import { bookingApi } from "../../features/APIS/BookingsApi";
 import { eventApi } from "../../features/APIS/EventsApi";
 import { FaEdit } from "react-icons/fa";
 import { FaDeleteLeft, FaX } from "react-icons/fa6";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../App/store";
 
 const MySwal = withReactContent(Swal);
 
@@ -43,8 +45,7 @@ export const AllBookings: React.FC = () => {
 
   const eventMap = new Map<number, string>(events.map((e: any) => [e.eventId, e.title]));
 
-  const admin = JSON.parse(localStorage.getItem("user") || "{}");
-  const adminName = `${admin.firstName || "Admin"}`;
+  const firstName = useSelector((state:RootState)=>state.auth.user?.firstName)
 
   const filteredBookings = bookings.filter((b: Booking) => {
     const eventTitle = eventMap.get(b.eventId) ?? "";
@@ -155,7 +156,7 @@ export const AllBookings: React.FC = () => {
   return (
     <div className="min-h-screen p-6 bg-base-100 text-base-content">
       <div className="mb-6 text-xl sm:text-2xl font-semibold text-primary">
-        👋 Hey {adminName}, welcome!
+        👋 Hey {firstName}, welcome!
       </div>
       <div className="w-full max-w-7xl mx-auto bg-base-200 border border-base-content/10 shadow-xl rounded-xl p-6 overflow-x-auto">
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
