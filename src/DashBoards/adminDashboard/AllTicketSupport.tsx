@@ -1,4 +1,3 @@
-// ...all imports remain unchanged
 import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -8,7 +7,6 @@ import {
   useGetAllSupportTicketsQuery,
   useUpdateSupportTicketMutation,
 } from "../../features/APIS/supportTicketsApi";
-
 import {
   MessageCircle,
   Pencil,
@@ -24,16 +22,15 @@ import {
   Search,
 } from "lucide-react";
 import { adminResponseApi } from "../../features/APIS/AdminReponse";
+import type { RootState } from "../../App/store";
 
-interface SupportTicket {
+interface Ticket {
   ticketId: number;
   subject: string;
   description: string;
-  priority: string;
-  status: string;
   nationalId: number;
-  createdAt?: string;
-  updatedAt?: string;
+  status: string;
+  priority: string;
 }
 
 const ticketVariants = {
@@ -71,7 +68,7 @@ const AdminSupportTickets = () => {
   const [createAdminResponse] = adminResponseApi.useCreateAdminResponseMutation();
 
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [newStatus, setNewStatus] = useState<string>("Open");
+  const [newStatus, setNewStatus] = useState("Open");
   const [activeTicketId, setActiveTicketId] = useState<number | null>(null);
   const [responseMessage, setResponseMessage] = useState("");
   const [expandedTicketId, setExpandedTicketId] = useState<number | null>(null);
@@ -80,13 +77,16 @@ const AdminSupportTickets = () => {
   const [filterPriority, setFilterPriority] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const admin = useSelector((state: any) => state.auth.user);
+  const admin = useSelector((state: RootState) => state.auth.user);
 
   const {
     data: ticketResponses = [],
     refetch: refetchResponses,
     isFetching: isFetchingResponses,
-  } = adminResponseApi.useGetResponsesByTicketQuery(expandedTicketId!, { skip: expandedTicketId === null });
+  } = adminResponseApi.useGetResponsesByTicketQuery(
+    expandedTicketId ?? -1,  // 🛠️ Fix for typing issue
+    { skip: expandedTicketId === null }
+  );
 
   const handleStatusChange = (ticketId: number, currentStatus: string) => {
     setEditingId(ticketId);
@@ -107,7 +107,8 @@ const AdminSupportTickets = () => {
 
   const openModal = (ticketId: number) => {
     setActiveTicketId(ticketId);
-    (document.getElementById("response_modal") as HTMLDialogElement).showModal();
+    const modal = document.getElementById("response_modal") as HTMLDialogElement | null;
+    modal?.showModal();
   };
 
   const handleSubmitResponse = async () => {
@@ -115,18 +116,16 @@ const AdminSupportTickets = () => {
       toast.error("Missing required data.");
       return;
     }
-
     try {
       await createAdminResponse({
         ticketId: activeTicketId,
         nationalId: admin.nationalId,
         message: responseMessage,
       }).unwrap();
-
       setResponseMessage("");
-      (document.getElementById("response_modal") as HTMLDialogElement).close();
+      const modal = document.getElementById("response_modal") as HTMLDialogElement | null;
+      modal?.close();
       await refetchResponses();
-
       Swal.fire({
         icon: "success",
         title: "Response Sent",
@@ -138,10 +137,11 @@ const AdminSupportTickets = () => {
     }
   };
 
-  const countByStatus = (status: string) => tickets.filter((ticket: SupportTicket) => ticket.status === status).length;
+  const countByStatus = (status: string) =>
+    tickets.filter((ticket: Ticket) => ticket.status === status).length;
 
   const filteredTickets = useMemo(() => {
-    return tickets.filter((ticket: SupportTicket) => {
+    return tickets.filter((ticket: Ticket) => {
       const matchesText =
         ticket.subject.toLowerCase().includes(searchText.toLowerCase()) ||
         ticket.description.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -160,10 +160,10 @@ const AdminSupportTickets = () => {
   const totalPages = Math.ceil(filteredTickets.length / ITEMS_PER_PAGE);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10 bg-cover  p-6  bg-gray-900 text-white ">
-      <h1 className="text-4xl font-bold text-gray-900 mb-8">Admin - Support Tickets</h1>
+    <div className="max-w-7xl mx-auto px-4 py-10 p-6 bg-base-100 text-base-content transition-colors duration-300">
+      <h1 className="text-4xl font-bold text-base-content mb-8">Admin - Support Tickets</h1>
 
-      {/* Dashboard Stats */}
+      {/* Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
         {[{
           label: "Total",
@@ -208,14 +208,14 @@ const AdminSupportTickets = () => {
             placeholder="Search by subject, description, or NID"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="border px-3 py-2 rounded w-64"
+            className="input input-bordered w-64"
           />
         </div>
-        <select className="border px-3 py-2 rounded" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+        <select className="select select-bordered" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
           <option value="">All Statuses</option>
           {statusOptions.map(status => <option key={status} value={status}>{status}</option>)}
         </select>
-        <select className="border px-3 py-2 rounded" value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)}>
+        <select className="select select-bordered" value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)}>
           <option value="">All Priorities</option>
           {priorityOptions.map(priority => <option key={priority} value={priority}>{priority}</option>)}
         </select>
@@ -228,7 +228,7 @@ const AdminSupportTickets = () => {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`}
+              className={`btn ${currentPage === i + 1 ? 'btn-primary' : 'btn-ghost'}`}
             >
               {i + 1}
             </button>
@@ -236,15 +236,15 @@ const AdminSupportTickets = () => {
         </div>
       )}
 
-      {/* Ticket Cards */}
+      {/* Tickets List */}
       {isLoading ? (
-        <p className="text-gray-600">Loading tickets...</p>
+        <p className="text-base-content/70">Loading tickets...</p>
       ) : paginatedTickets.length === 0 ? (
-        <p className="text-gray-600">No tickets found.</p>
+        <p className="text-base-content/70">No tickets found.</p>
       ) : (
         <div className="flex flex-wrap gap-6">
           <AnimatePresence>
-            {paginatedTickets.map((ticket: SupportTicket) => (
+            {paginatedTickets.map((ticket: Ticket) => (
               <motion.div
                 key={ticket.ticketId}
                 variants={ticketVariants}
@@ -253,7 +253,7 @@ const AdminSupportTickets = () => {
                 exit="exit"
                 layout
                 transition={{ duration: 0.3 }}
-                className="w-full md:w-[48%] lg:w-[32%] bg-white/10 backdrop-blur-md border border-white/20 text-white hover:shadow-xl transition-all duration-300 rounded-xl p-6"
+                className="w-full md:w-[48%] lg:w-[32%] bg-base-200 border border-base-300 text-base-content hover:shadow-xl transition-all duration-300 rounded-xl p-6"
               >
                 <div className="flex flex-col justify-between h-full">
                   <div>
@@ -270,7 +270,7 @@ const AdminSupportTickets = () => {
                         <span className="font-medium">Status:</span>{" "}
                         {editingId === ticket.ticketId ? (
                           <select
-                            className="mt-1 border px-2 py-1 text-black rounded"
+                            className="mt-1 select select-bordered"
                             value={newStatus}
                             onChange={(e) => setNewStatus(e.target.value)}
                           >
@@ -284,29 +284,24 @@ const AdminSupportTickets = () => {
                           </span>
                         )}
                       </div>
-                      <div>
-                        <span className="font-medium">Created:</span>{" "}
-                        {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : "N/A"}
-                      </div>
                     </div>
-
                     <button
                       onClick={() => setExpandedTicketId(expandedTicketId === ticket.ticketId ? null : ticket.ticketId)}
-                      className="text-sm mt-2 text-white underline flex items-center gap-1"
+                      className="text-sm mt-2 underline flex items-center gap-1"
                     >
                       {expandedTicketId === ticket.ticketId ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                       {expandedTicketId === ticket.ticketId ? "Hide" : "Show"} Responses
                     </button>
 
                     {expandedTicketId === ticket.ticketId && (
-                      <div className="mt-2 bg-white/20 backdrop-blur p-2 rounded text-white text-sm border border-white/10">
+                      <div className="mt-2 bg-base-300 p-2 rounded text-sm border border-base-200">
                         {isFetchingResponses ? (
                           <p>Loading responses...</p>
                         ) : ticketResponses.length > 0 ? (
                           ticketResponses.map((r) => (
-                            <div key={r.responseId} className="border-b border-white/10 py-1">
+                            <div key={r.responseId} className="border-b border-base-200 py-1">
                               <div className="font-medium">{r.message}</div>
-                              <div className="text-xs text-gray-300">{new Date(r.createdAt).toLocaleString()}</div>
+                              <div className="text-xs opacity-70">{new Date(r.createdAt).toLocaleString()}</div>
                             </div>
                           ))
                         ) : (
@@ -319,19 +314,19 @@ const AdminSupportTickets = () => {
                   <div className="flex flex-wrap gap-2 mt-4">
                     {editingId === ticket.ticketId ? (
                       <>
-                        <button onClick={handleUpdate} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2">
+                        <button onClick={handleUpdate} className="btn btn-success">
                           <Save size={16} /> Save
                         </button>
-                        <button onClick={() => setEditingId(null)} className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2">
+                        <button onClick={() => setEditingId(null)} className="btn">
                           <X size={16} /> Cancel
                         </button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => handleStatusChange(ticket.ticketId, ticket.status)} className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2">
+                        <button onClick={() => handleStatusChange(ticket.ticketId, ticket.status)} className="btn btn-primary">
                           <Pencil size={16} /> Change Status
                         </button>
-                        <button onClick={() => openModal(ticket.ticketId)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2">
+                        <button onClick={() => openModal(ticket.ticketId)} className="btn btn-accent">
                           <MessageCircle size={16} /> Respond
                         </button>
                       </>
@@ -344,7 +339,7 @@ const AdminSupportTickets = () => {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Response Modal */}
       <dialog id="response_modal" className="modal">
         <div className="modal-box">
           <h3 className="font-bold text-lg mb-4">Respond to Support Ticket</h3>
@@ -356,10 +351,10 @@ const AdminSupportTickets = () => {
           ></textarea>
           <div className="modal-action">
             <form method="dialog" className="flex gap-2">
-              <button className="btn flex items-center gap-1" type="submit">
+              <button className="btn" type="submit">
                 <X size={16} /> Cancel
               </button>
-              <button type="button" onClick={handleSubmitResponse} className="btn btn-primary flex items-center gap-1">
+              <button type="button" onClick={handleSubmitResponse} className="btn btn-primary">
                 <MailCheck size={16} /> Send Response
               </button>
             </form>
