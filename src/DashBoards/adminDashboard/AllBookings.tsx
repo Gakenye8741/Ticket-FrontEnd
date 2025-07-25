@@ -38,7 +38,13 @@ export const AllBookings: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [eventFilter, setEventFilter] = useState("");
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const eventMap = new Map<number, string>(events.map((e: any) => [e.eventId, e.title]));
+
+  const admin = JSON.parse(localStorage.getItem("user") || "{}");
+  const adminName = `${admin.firstName || "Admin"}`;
 
   const filteredBookings = bookings.filter((b: Booking) => {
     const eventTitle = eventMap.get(b.eventId) ?? "";
@@ -50,6 +56,12 @@ export const AllBookings: React.FC = () => {
       (!eventFilter || eventTitle.toLowerCase().includes(eventFilter.toLowerCase()))
     );
   });
+
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+  const paginatedBookings = filteredBookings.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const openStatusModal = async (booking: Booking) => {
     const { value: newStatus } = await MySwal.fire({
@@ -141,22 +153,25 @@ export const AllBookings: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-cover  p-6  bg-gray-900 text-white ">
-      <div className="w-full max-w-7xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl rounded-xl p-6 overflow-x-auto glow-effect">
+    <div className="min-h-screen p-6 bg-base-100 text-base-content">
+      <div className="mb-6 text-xl sm:text-2xl font-semibold text-primary">
+        👋 Hey {adminName}, welcome!
+      </div>
+      <div className="w-full max-w-7xl mx-auto bg-base-200 border border-base-content/10 shadow-xl rounded-xl p-6 overflow-x-auto">
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-          <h2 className="text-3xl font-bold text-teal-400">All Bookings</h2>
+          <h2 className="text-3xl font-bold text-primary">All Bookings</h2>
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full sm:w-auto">
             <input
               type="text"
               placeholder="Search Booking / National ID"
-              className="px-4 py-2 w-full sm:w-48 rounded-md bg-slate-700 text-white placeholder-white/70"
+              className="px-4 py-2 w-full sm:w-48 rounded-md bg-base-300 text-base-content placeholder:text-base-content/50"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 rounded bg-slate-700 text-white"
+              className="px-4 py-2 rounded bg-base-300 text-base-content"
             >
               <option value="">All Statuses</option>
               {bookingStatusEnum.map((s) => (
@@ -166,7 +181,7 @@ export const AllBookings: React.FC = () => {
             <input
               type="text"
               placeholder="Filter by Event Name"
-              className="px-4 py-2 w-full sm:w-48 rounded-md bg-slate-700 text-white placeholder-white/70"
+              className="px-4 py-2 w-full sm:w-48 rounded-md bg-base-300 text-base-content placeholder:text-base-content/50"
               value={eventFilter}
               onChange={(e) => setEventFilter(e.target.value)}
             />
@@ -174,51 +189,74 @@ export const AllBookings: React.FC = () => {
         </div>
 
         {filteredBookings.length === 0 ? (
-          <div className="text-center text-cyan-200">No bookings match your filters.</div>
+          <div className="text-center text-base-content/70">No bookings match your filters.</div>
         ) : (
-          <div className="overflow-x-auto rounded-md border border-white/10">
-            <table className="min-w-full text-sm text-white">
-              <thead>
-                <tr className="bg-slate-800 text-teal-300 uppercase text-xs">
-                  <th className="px-4 py-2 text-left">Booking ID</th>
-                  <th className="px-4 py-2 text-left">National ID</th>
-                  <th className="px-4 py-2 text-left">Event</th>
-                  <th className="px-4 py-2 text-left">Quantity</th>
-                  <th className="px-4 py-2 text-left">Total</th>
-                  <th className="px-4 py-2 text-left">Status</th>
-                  <th className="px-4 py-2 text-left">Created</th>
-                  <th className="px-4 py-2 text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBookings.map((b: Booking) => (
-                  <tr key={b.bookingId} className="border-b border-white/10 hover:bg-white/5">
-                    <td className="px-4 py-2">{b.bookingId}</td>
-                    <td className="px-4 py-2">{b.nationalId}</td>
-                    <td className="px-4 py-2">{eventMap.get(b.eventId) ?? "Unknown"}</td>
-                    <td className="px-4 py-2">{b.quantity}</td>
-                    <td className="px-4 py-2">${Number(b.totalAmount).toFixed(2)}</td>
-                    <td className="px-4 py-2">{getStatusBadge(b.bookingStatus)}</td>
-                    <td className="px-4 py-2">{new Date(b.createdAt).toLocaleDateString()}</td>
-                    <td className="px-4 py-2 space-x-2">
-                      <button
-                        onClick={() => openStatusModal(b)}
-                        className="text-xs px-2 py-1 bg-blue-600 rounded hover:bg-blue-700"
-                      ><FaEdit /></button>
-                      <button
-                        onClick={() => handleCancel(b.bookingId)}
-                        className="text-xs px-2 py-1 bg-yellow-600 rounded hover:bg-yellow-700"
-                      ><FaX /></button>
-                      <button
-                        onClick={() => handleDelete(b.bookingId)}
-                        className="text-xs px-2 py-1 bg-red-600 rounded hover:bg-red-700"
-                      ><FaDeleteLeft /></button>
-                    </td>
+          <>
+            <div className="overflow-x-auto rounded-md border border-base-content/10 shadow-md">
+              <table className="min-w-full text-sm text-base-content border border-base-content/20">
+                <thead>
+                  <tr className="bg-base-300 text-primary uppercase text-xs border-b border-base-content/10">
+                    <th className="px-4 py-2 text-left">Booking ID</th>
+                    <th className="px-4 py-2 text-left">National ID</th>
+                    <th className="px-4 py-2 text-left">Event</th>
+                    <th className="px-4 py-2 text-left">Quantity</th>
+                    <th className="px-4 py-2 text-left">Total</th>
+                    <th className="px-4 py-2 text-left">Status</th>
+                    <th className="px-4 py-2 text-left">Created</th>
+                    <th className="px-4 py-2 text-left">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {paginatedBookings.map((b: Booking) => (
+                    <tr key={b.bookingId} className="border-b border-base-content/10 hover:bg-base-300">
+                      <td className="px-4 py-2">{b.bookingId}</td>
+                      <td className="px-4 py-2">{b.nationalId}</td>
+                      <td className="px-4 py-2">{eventMap.get(b.eventId) ?? "Unknown"}</td>
+                      <td className="px-4 py-2">{b.quantity}</td>
+                      <td className="px-4 py-2">${Number(b.totalAmount).toFixed(2)}</td>
+                      <td className="px-4 py-2">{getStatusBadge(b.bookingStatus)}</td>
+                      <td className="px-4 py-2">{new Date(b.createdAt).toLocaleDateString()}</td>
+                      <td className="px-4 py-2 space-x-2">
+                        <button
+                          onClick={() => openStatusModal(b)}
+                          className="text-xs px-2 py-1 bg-blue-600 rounded hover:bg-blue-700"
+                        ><FaEdit /></button>
+                        <button
+                          onClick={() => handleCancel(b.bookingId)}
+                          className="text-xs px-2 py-1 bg-yellow-600 rounded hover:bg-yellow-700"
+                        ><FaX /></button>
+                        <button
+                          onClick={() => handleDelete(b.bookingId)}
+                          className="text-xs px-2 py-1 bg-red-600 rounded hover:bg-red-700"
+                        ><FaDeleteLeft /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="flex justify-center items-center gap-4 mt-6">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                className="px-4 py-2 bg-base-300 hover:bg-base-200 rounded disabled:opacity-50"
+                disabled={currentPage === 1}
+              >
+                ◀ Previous
+              </button>
+              <span className="text-base-content">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                className="px-4 py-2 bg-base-300 hover:bg-base-200 rounded disabled:opacity-50"
+                disabled={currentPage === totalPages}
+              >
+                Next ▶
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>

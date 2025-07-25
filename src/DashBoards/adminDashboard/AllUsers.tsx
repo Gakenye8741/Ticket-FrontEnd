@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { PuffLoader } from "react-spinners";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -26,15 +27,17 @@ interface userData {
 const MySwal = withReactContent(Swal);
 
 export const AllUsers = () => {
-  const { data: AllUsersData = [], isLoading, error } =
-    useGetAllUsersProfilesQuery({ pollingInterval: 30000 });
-
+  const { data: AllUsersData = [], isLoading, error } = useGetAllUsersProfilesQuery({ pollingInterval: 30000 });
   const [deleteUser] = useDeleteUserMutation();
   const [updateUser] = useUpdateAdminUserMutation();
   const [registerUser] = useRegisterUserMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [visibleCount, setVisibleCount] = useState(10); // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const admin = useSelector((state: any) => state.auth.user);
+  const adminName = admin?.firstName || "Admin";
 
   const filteredUsers = AllUsersData.filter((user: userData) => {
     const lowerSearch = searchTerm.toLowerCase();
@@ -44,6 +47,12 @@ export const AllUsers = () => {
       user.nationalId.toString().includes(lowerSearch)
     );
   });
+
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const handleDelete = async (nationalId: number) => {
     const confirm = await MySwal.fire({
@@ -66,7 +75,7 @@ export const AllUsers = () => {
           icon: "success",
           customClass: { popup: "glass-modal" },
         });
-      } catch (err) {
+      } catch {
         MySwal.fire({
           title: "Error!",
           text: "Failed to delete user.",
@@ -114,9 +123,7 @@ export const AllUsers = () => {
           role,
         };
 
-        if (password) {
-          payload.password = password;
-        }
+        if (password) payload.password = password;
 
         return payload;
       },
@@ -131,7 +138,7 @@ export const AllUsers = () => {
           icon: "success",
           customClass: { popup: "glass-modal" },
         });
-      } catch (err) {
+      } catch {
         MySwal.fire({
           title: "Error!",
           text: "Failed to update user.",
@@ -177,22 +184,13 @@ export const AllUsers = () => {
     if (formValues) {
       try {
         await registerUser({ ...formValues }).unwrap();
-
-        // Reset fields
-        (document.getElementById("add-fname") as HTMLInputElement).value = "";
-        (document.getElementById("add-lname") as HTMLInputElement).value = "";
-        (document.getElementById("add-email") as HTMLInputElement).value = "";
-        (document.getElementById("add-password") as HTMLInputElement).value = "";
-        (document.getElementById("add-id") as HTMLInputElement).value = "";
-        (document.getElementById("add-address") as HTMLInputElement).value = "";
-
         MySwal.fire({
           title: "Success!",
           text: "User created successfully.",
           icon: "success",
           customClass: { popup: "glass-modal" },
         });
-      } catch (err) {
+      } catch {
         MySwal.fire({
           title: "Error!",
           text: "Failed to create user.",
@@ -204,23 +202,25 @@ export const AllUsers = () => {
   };
 
   return (
-    <div
-      className="min-h-screen bg-cover  p-6  bg-gray-900 text-white "      
-    >
-      <div className="w-full max-w-7xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl rounded-xl p-6 overflow-x-auto glow-effect">
+    <div className="min-h-screen p-6 bg-base-100 text-base-content">
+      <div className="mb-6 text-xl sm:text-2xl font-semibold text-primary">
+        👋 Hey {adminName}, welcome!
+      </div>
+
+      <div className="w-full max-w-7xl border border-base-300 bg-base-200 shadow-xl rounded-xl p-6 overflow-x-auto">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-          <h2 className="text-3xl font-bold text-orange-400 glow-text">All Users</h2>
+          <h2 className="text-3xl font-bold text-primary">All Users</h2>
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <input
               type="text"
               placeholder="Search by name or ID"
-              className="px-4 py-2 w-full sm:w-64 rounded-md bg-white/20 text-white placeholder-white/70 focus:outline-none focus:ring focus:ring-cyan-300"
+              className="px-4 py-2 w-full sm:w-64 rounded-md bg-base-300 text-base-content placeholder:text-base-content/70 focus:outline-none focus:ring focus:ring-primary"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <button
               onClick={handleAddUser}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded glow-button"
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
             >
               ➕ Add User
             </button>
@@ -228,7 +228,7 @@ export const AllUsers = () => {
         </div>
 
         {error ? (
-          <div className="text-red-400 text-center text-lg font-semibold">
+          <div className="text-error text-center text-lg font-semibold">
             Something went wrong. Please try again.
           </div>
         ) : isLoading ? (
@@ -236,74 +236,85 @@ export const AllUsers = () => {
             <PuffLoader color="#22d3ee" />
           </div>
         ) : filteredUsers.length === 0 ? (
-          <div className="text-center text-cyan-200 text-lg">No matching users found.</div>
+          <div className="text-center text-base-content text-lg">No matching users found.</div>
         ) : (
           <>
-            <table className="min-w-full text-sm text-white">
-              <thead>
-                <tr className="bg-white/20 text-orange-300 uppercase text-xs tracking-wider">
-                  <th className="px-4 py-3 text-left">First Name</th>
-                  <th className="px-4 py-3 text-left">Last Name</th>
-                  <th className="px-4 py-3 text-left">Email</th>
-                  <th className="px-4 py-3 text-left">National ID</th>
-                  <th className="px-4 py-3 text-left">Role</th>
-                  <th className="px-4 py-3 text-left">Created At</th>
-                  <th className="px-4 py-3 text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.slice(0, visibleCount).map((user: userData, index: number) => (
-                  <tr
-                    key={index}
-                    className="hover:bg-white/10 transition duration-200 border-b border-white/10"
-                  >
-                    <td className="px-4 py-2">{user.firstName}</td>
-                    <td className="px-4 py-2">{user.lastName}</td>
-                    <td className="px-4 py-2">{user.email}</td>
-                    <td className="px-4 py-2">{user.nationalId}</td>
-                    <td className="px-4 py-2">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-semibold ${
-                          user.role === "admin"
-                            ? "bg-green-600 text-white"
-                            : "bg-yellow-500 text-black"
-                        }`}
-                      >
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-2 space-x-2">
-                      <button
-                        onClick={() => handleEdit(user)}
-                        className="px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded text-white text-xs glow-button"
-                      >
-                        <FaEdit />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user.nationalId)}
-                        className="px-3 py-1 bg-red-500 hover:bg-red-600 rounded text-white text-xs glow-button"
-                      >
-                        <FaDeleteLeft />
-                      </button>
-                    </td>
+            <div className="overflow-auto border-2 border-blue-500 rounded-lg shadow-xl bg-base-200/60 backdrop-blur-sm">
+              <table className="min-w-full text-sm text-base-content">
+                <thead>
+                  <tr className="bg-base-300 text-primary uppercase text-xs tracking-wider">
+                    <th className="px-4 py-3 text-left">First Name</th>
+                    <th className="px-4 py-3 text-left">Last Name</th>
+                    <th className="px-4 py-3 text-left">Email</th>
+                    <th className="px-4 py-3 text-left">National ID</th>
+                    <th className="px-4 py-3 text-left">Role</th>
+                    <th className="px-4 py-3 text-left">Created At</th>
+                    <th className="px-4 py-3 text-left">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {paginatedUsers.map((user: userData, index: number) => (
+                    <tr
+                      key={index}
+                      className="hover:bg-base-100 transition duration-200 border-b border-base-300"
+                    >
+                      <td className="px-4 py-2">{user.firstName}</td>
+                      <td className="px-4 py-2">{user.lastName}</td>
+                      <td className="px-4 py-2">{user.email}</td>
+                      <td className="px-4 py-2">{user.nationalId}</td>
+                      <td className="px-4 py-2">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-semibold ${
+                            user.role === "admin"
+                              ? "bg-green-600 text-white"
+                              : "bg-yellow-400 text-black"
+                          }`}
+                        >
+                          {user.role}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2">
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-2 space-x-2">
+                        <button
+                          onClick={() => handleEdit(user)}
+                          className="px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded text-white text-xs"
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user.nationalId)}
+                          className="px-3 py-1 bg-red-500 hover:bg-red-600 rounded text-white text-xs"
+                        >
+                          <FaDeleteLeft />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-            {filteredUsers.length > visibleCount && (
-              <div className="flex justify-center mt-4">
-                <button
-                  onClick={() => setVisibleCount((prev) => prev + 10)}
-                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded glow-button"
-                >
-                  Load More
-                </button>
-              </div>
-            )}
+            <div className="flex justify-center mt-6 gap-4 items-center">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                className="px-4 py-2 bg-base-300 hover:bg-base-200 rounded disabled:opacity-50"
+                disabled={currentPage === 1}
+              >
+                ◀ Previous
+              </button>
+              <span className="text-base-content font-medium">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                className="px-4 py-2 bg-base-300 hover:bg-base-200 rounded disabled:opacity-50"
+                disabled={currentPage === totalPages}
+              >
+                Next ▶
+              </button>
+            </div>
           </>
         )}
       </div>
