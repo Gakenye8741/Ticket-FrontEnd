@@ -36,22 +36,22 @@ const Login = () => {
 
   return (
     <>
-      <Toaster richColors position='top-right' />
+      <Toaster richColors position="top-right" />
       <Navbar />
-      <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-gradient-to-br from-white to-slate-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-base-200 text-base-content transition-colors duration-300">
         {/* Image Side */}
         <div className="hidden md:block">
           <img
             src={loginImage}
-            alt="Event Login"
+            alt="Login Illustration"
             className="w-full h-full object-cover"
           />
         </div>
 
         {/* Form Side */}
         <div className="flex items-center justify-center p-6">
-          <div className="bg-white dark:bg-gray-900 shadow-2xl rounded-2xl p-8 w-full max-w-sm transition-all">
-            <h2 className="text-3xl font-bold mb-6 text-center text-primary">🎫 Event Portal Login</h2>
+          <div className="bg-base-200 shadow-xl rounded-2xl p-8 w-full max-w-md border-2 border-blue-500">
+            <h2 className="text-3xl font-bold mb-6 text-center">🎓 TicketStream Login Portal</h2>
 
             <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
               {/* Email Field */}
@@ -59,12 +59,12 @@ const Login = () => {
                 <label className="block text-sm font-medium mb-1">📧 Email</label>
                 <input
                   type="email"
-                  className="input input-bordered w-full rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary transition"
+                  className="input input-bordered w-full"
                   placeholder="Enter your email"
                   {...register('email', { required: true })}
                 />
                 {errors.email && (
-                  <span className="text-red-500 text-sm mt-1 block">Email is required.</span>
+                  <span className="text-error text-sm mt-1 block">Email is required.</span>
                 )}
               </div>
 
@@ -74,7 +74,7 @@ const Login = () => {
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    className="input input-bordered w-full rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-primary transition"
+                    className="input input-bordered w-full pr-10"
                     placeholder="Enter your password"
                     {...register('password', { required: true })}
                   />
@@ -88,22 +88,22 @@ const Login = () => {
                   </button>
                 </div>
                 {errors.password && (
-                  <span className="text-red-500 text-sm mt-1 block">Password is required.</span>
+                  <span className="text-error text-sm mt-1 block">Password is required.</span>
                 )}
               </div>
 
               {/* Submit Button */}
               <button
                 type="submit"
-                className="btn btn-primary w-full mt-4 rounded-lg text-lg tracking-wide transition hover:scale-[1.02] active:scale-95"
+                className="btn btn-primary w-full mt-4 text-lg tracking-wide"
                 disabled={isLoading}
               >
                 {isLoading ? '🚀 Logging in...' : '🎯 Login'}
               </button>
             </form>
 
-            {/* Link to Register */}
-            <p className="text-sm text-center mt-5 text-gray-600 dark:text-gray-300">
+            {/* Register Link */}
+            <p className="text-sm text-center mt-5">
               Don't have an account?{' '}
               <Link to="/register" className="text-primary hover:underline">
                 Register here

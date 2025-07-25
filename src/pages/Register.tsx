@@ -25,9 +25,9 @@ const getPasswordStrength = (password: string) => {
   if (/\d/.test(password)) score++;
   if (/[@$!%*?&#^()\-_=+]/.test(password)) score++;
 
-  if (score <= 2) return { label: 'Weak', color: 'bg-red-500', percent: '33%' };
-  if (score === 3 || score === 4) return { label: 'Medium', color: 'bg-yellow-500', percent: '66%' };
-  return { label: 'Strong', color: 'bg-green-500', percent: '100%' };
+  if (score <= 2) return { label: 'Weak', color: 'bg-error', percent: '33%' };
+  if (score === 3 || score === 4) return { label: 'Medium', color: 'bg-warning', percent: '66%' };
+  return { label: 'Strong', color: 'bg-success', percent: '100%' };
 };
 
 const Register = () => {
@@ -50,13 +50,13 @@ const Register = () => {
     };
 
     if (isNaN(parsedData.nationalId)) {
-      toast.error("❌ National ID must be a number.");
+      toast.error('❌ National ID must be a number.');
       return;
     }
 
     try {
       const loadingToastId = toast.loading('🚀 Creating Account...');
-      await registerUser(parsedData).unwrap(); // ✅ Fixed: Removed unused `res`
+      await registerUser(parsedData).unwrap();
       toast.success('✅ Account created successfully!', { id: loadingToastId });
       navigate('/login');
     } catch (error: any) {
@@ -70,7 +70,7 @@ const Register = () => {
     <>
       <Toaster richColors position="top-right" />
       <Navbar />
-      <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-base-100">
+      <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-base-100 text-base-content">
         {/* Image Side */}
         <div className="hidden md:flex items-center justify-center">
           <img
@@ -81,44 +81,44 @@ const Register = () => {
         </div>
 
         {/* Form Side */}
-        <div className="flex items-center justify-center p-8">
-          <div className="bg-white dark:bg-gray-900 shadow-xl rounded-lg p-8 w-full max-w-md">
+        <div className="flex items-center justify-center p-8 mt-10">
+          <div className="bg-base-200 shadow-xl rounded-2xl p-8 w-full max-w-md border-2 border-blue-500">
             <h2 className="text-3xl font-bold text-center mb-6 text-primary">
               📝 Create an Account
             </h2>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {/* First Name */}
-              <div>
-                <label className="block text-sm font-medium mb-1">🧍‍♀️ First Name</label>
-                <input
-                  type="text"
-                  className="input input-bordered w-full"
-                  placeholder="Jane"
-                  {...register('firstName', { required: true })}
-                />
-                {errors.firstName && (
-                  <span className="text-red-500 text-sm mt-1 block">First name is required.</span>
-                )}
-              </div>
-
-              {/* Last Name */}
-              <div>
-                <label className="block text-sm font-medium mb-1">🧍 Last Name</label>
-                <input
-                  type="text"
-                  className="input input-bordered w-full"
-                  placeholder="Doe"
-                  {...register('lastName', { required: true })}
-                />
-                {errors.lastName && (
-                  <span className="text-red-500 text-sm mt-1 block">Last name is required.</span>
-                )}
+              {/* First & Last Name */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="label label-text font-medium">First Name</label>
+                  <input
+                    type="text"
+                    className="input input-bordered w-full"
+                    placeholder="Jane"
+                    {...register('firstName', { required: true })}
+                  />
+                  {errors.firstName && (
+                    <p className="text-error text-sm mt-1">First name is required.</p>
+                  )}
+                </div>
+                <div>
+                  <label className="label label-text font-medium">Last Name</label>
+                  <input
+                    type="text"
+                    className="input input-bordered w-full"
+                    placeholder="Doe"
+                    {...register('lastName', { required: true })}
+                  />
+                  {errors.lastName && (
+                    <p className="text-error text-sm mt-1">Last name is required.</p>
+                  )}
+                </div>
               </div>
 
               {/* National ID */}
               <div>
-                <label className="block text-sm font-medium mb-1">🆔 National ID</label>
+                <label className="label label-text font-medium">National ID</label>
                 <input
                   type="number"
                   className="input input-bordered w-full"
@@ -126,13 +126,13 @@ const Register = () => {
                   {...register('nationalId', { required: true, valueAsNumber: true })}
                 />
                 {errors.nationalId && (
-                  <span className="text-red-500 text-sm mt-1 block">National ID is required.</span>
+                  <p className="text-error text-sm mt-1">National ID is required.</p>
                 )}
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium mb-1">📧 Email</label>
+                <label className="label label-text font-medium">Email</label>
                 <input
                   type="email"
                   className="input input-bordered w-full"
@@ -140,13 +140,13 @@ const Register = () => {
                   {...register('email', { required: true })}
                 />
                 {errors.email && (
-                  <span className="text-red-500 text-sm mt-1 block">Email is required.</span>
+                  <p className="text-error text-sm mt-1">Email is required.</p>
                 )}
               </div>
 
-              {/* Password with Strength */}
+              {/* Password */}
               <div>
-                <label className="block text-sm font-medium mb-1">🔐 Password</label>
+                <label className="label label-text font-medium">Password</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -165,44 +165,47 @@ const Register = () => {
                   </button>
                 </div>
                 {errors.password && (
-                  <span className="text-red-500 text-sm mt-1 block">Password is required.</span>
+                  <p className="text-error text-sm mt-1">Password is required.</p>
                 )}
-
                 {password && (
                   <div className="mt-2">
-                    <div className="h-2 w-full rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                    <div className="h-2 w-full rounded bg-base-300 overflow-hidden">
                       <div
                         className={`h-full ${getPasswordStrength(password).color}`}
                         style={{ width: getPasswordStrength(password).percent }}
-                      ></div>
+                      />
                     </div>
-                    <p className="text-sm mt-1 text-gray-600 dark:text-gray-300">
+                    <p className="text-sm mt-1 text-base-content">
                       Strength: <span className="capitalize">{getPasswordStrength(password).label}</span>
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Contact Phone */}
+              {/* Phone */}
               <div>
-                <label className="block text-sm font-medium mb-1">📞 Contact Phone</label>
+                <label className="label label-text font-medium">Phone</label>
                 <input
                   type="text"
                   className="input input-bordered w-full"
-                  placeholder="+254**********"
+                  placeholder="+254..."
                   {...register('contactPhone', { required: true })}
                 />
                 {errors.contactPhone && (
-                  <span className="text-red-500 text-sm mt-1 block">Phone number is required.</span>
+                  <p className="text-error text-sm mt-1">Phone number is required.</p>
                 )}
               </div>
 
-              <button type="submit" className="btn btn-primary w-full mt-4" disabled={isLoading}>
+              <button
+                type="submit"
+                className="btn btn-primary w-full mt-2"
+                disabled={isLoading}
+              >
                 {isLoading ? '🚀 Creating...' : '🎯 Create Account'}
               </button>
 
-              {/* Login Link */}
-              <p className="text-sm text-center mt-4 text-gray-600 dark:text-gray-300">
+              {/* Already have account */}
+              <p className="text-sm text-center mt-4 text-base-content">
                 Already have an account?{' '}
                 <Link to="/login" className="text-primary hover:underline">
                   Login here
