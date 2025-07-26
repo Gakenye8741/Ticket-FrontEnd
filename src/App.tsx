@@ -26,6 +26,7 @@ import ContactForm from './pages/Contact';
 import GetPaymentsByNationalId from './DashBoards/dashboard/GetPaymentsByNationalId';
 import AllPayments from './DashBoards/adminDashboard/GetAllPayments';
 import RootLayout from './DashBoards/dashboardDesign/RootLayout';
+import TicketDisplay from './DashBoards/dashboard/UserTickets';
 
 function App() {
   const Router = createBrowserRouter([
@@ -55,6 +56,7 @@ function App() {
         { path: 'MyBookings', element: <BookingsByNationalId /> },
         { path: 'supportTickets', element: <UserSupportTickets /> },
         { path: 'Payments', element: <GetPaymentsByNationalId /> },
+        { path: 'MyTickets', element: <TicketDisplay /> }
       ],
     },
     {

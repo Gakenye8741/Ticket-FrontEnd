@@ -46,6 +46,18 @@ export const SideNav = ({ onNavItemClick }: { onNavItemClick?: () => void }) => 
           Support Tickets
         </Link>
       </li>
+        
+         <li>
+        <Link
+          to="MyTickets"
+          onClick={onNavItemClick}
+          className="flex items-center gap-3 p-3 rounded-lg hover:bg-green-600 transition duration-300"
+        >
+          <Ticket className="text-green-400" />
+          My tickets
+        </Link>
+      </li>
+
       <li>
         <Link
           to="/"
