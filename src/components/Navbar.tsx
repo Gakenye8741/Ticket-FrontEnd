@@ -51,7 +51,9 @@ export const Navbar = () => {
   return (
     <>
       <div className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-        scrolled ? "backdrop-blur bg-base-100/70 shadow-md" : "bg-base-100"
+        scrolled
+          ? "backdrop-blur bg-base-100/70 shadow-md border-b border-base-300"
+          : "bg-base-100 border-b border-base-300"
       }`}>
         <div className="navbar">
           <div className="navbar-start">
