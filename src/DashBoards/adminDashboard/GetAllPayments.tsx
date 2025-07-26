@@ -3,8 +3,6 @@ import { paymentApi } from '../../features/APIS/PaymentApi';
 import { PuffLoader } from 'react-spinners';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../App/store';
-import { pdf } from '@react-pdf/renderer';
-import TicketDocument from '../adminDashboard/Ticket'; // Make sure this path is correct
 
 const AllPayments: React.FC = () => {
   const { data: payments = [], isLoading, isError, error } = paymentApi.useGetAllPaymentsQuery({});
@@ -22,25 +20,6 @@ const AllPayments: React.FC = () => {
 
   const totalPages = Math.ceil(filteredPayments.length / pageSize);
   const currentPayments = filteredPayments.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
-  const generatePDF = async (payment: any) => {
-    try {
-      const doc = <TicketDocument payment={payment} />;
-      const asPdf = pdf(doc);
-      const blob = await asPdf.toBlob();
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ticket-${payment.bookingId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Error generating PDF:', err);
-    }
-  };
 
   return (
     <div className="min-h-screen p-6 bg-base-100 text-base-content">
@@ -88,7 +67,6 @@ const AllPayments: React.FC = () => {
                     <th className="px-4 py-2">Status</th>
                     <th className="px-4 py-2">Method</th>
                     <th className="px-4 py-2">Date</th>
-                    <th className="px-4 py-2">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -112,14 +90,6 @@ const AllPayments: React.FC = () => {
                       </td>
                       <td className="px-4 py-2">{payment.paymentMethod || 'N/A'}</td>
                       <td className="px-4 py-2">{new Date(payment.paymentDate).toLocaleString()}</td>
-                      <td className="px-4 py-2">
-                        <button
-                          className="btn btn-xs btn-primary"
-                          onClick={() => generatePDF(payment)}
-                        >
-                          Download Ticket
-                        </button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
