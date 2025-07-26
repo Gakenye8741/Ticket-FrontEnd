@@ -50,10 +50,8 @@ export const Navbar = () => {
 
   return (
     <>
-      <div className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-        scrolled
-          ? "backdrop-blur bg-base-100/70 shadow-md border-b border-base-300"
-          : "bg-base-100 border-b border-base-300"
+      <div className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 border-b border-base-300 ${
+        scrolled ? "backdrop-blur bg-base-100/70 shadow-md" : "bg-base-100"
       }`}>
         <div className="navbar">
           <div className="navbar-start">
@@ -134,6 +132,7 @@ export const Navbar = () => {
         </div>
       </div>
 
+      {/* Bottom navbar for small screens */}
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 backdrop-blur bg-base-100/40 shadow-md border-t animate-glow">
         <ul className="flex justify-around items-center py-2">
           <li><Link to="/" className={`flex flex-col items-center ${isActive("/")}`}><Home className="h-5 w-5" /><span className="text-xs">Home</span></Link></li>
