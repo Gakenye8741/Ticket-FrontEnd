@@ -25,6 +25,7 @@ const navItems = [
   { name: "Manage Payments", path: "AllPayments", icon: <DollarSign className="text-yellow-900" /> },
   { name: "Manage Support Tickets", path: "supportTickets", icon: <Ticket className="text-purple-400" /> },
   { name: "Manage Ticket Types", path: "ticketTypes", icon: <FileText className="text-teal-400" /> },
+  { name: "Sales Report", path: "SalesReports", icon: <User className="text-red-400" /> },
   { name: "My Profile", path: "adminprofile", icon: <User className="text-purple-400" /> },
   { name: "Logout", path: "#", icon: <LogOut className="text-red-500" /> },
 ];

@@ -30,6 +30,7 @@ import TicketDisplay from './DashBoards/dashboard/UserTickets';
 import EmailVerification from './pages/EmailVerification';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/PasswordReset';
+import SalesReport from './DashBoards/adminDashboard/SalesReport';
 
 function App() {
   const Router = createBrowserRouter([
@@ -85,6 +86,8 @@ function App() {
         { path: 'ticketTypes', element: <TicketTypes /> },
         { path: 'AllPayments', element: <AllPayments /> },
         { path: 'adminprofile', element: <AdminUserProfile /> },
+        { path: 'SalesReports', element: <SalesReport /> },
+        
       ],
     },
   ]);

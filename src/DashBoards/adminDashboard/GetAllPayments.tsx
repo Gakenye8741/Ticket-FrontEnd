@@ -1,126 +1,177 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { paymentApi } from '../../features/APIS/PaymentApi';
+import { bookingApi } from '../../features/APIS/BookingsApi';
+import { eventApi } from '../../features/APIS/EventsApi';
+import { ticketApi } from '../../features/APIS/ticketsType.Api';
 import { PuffLoader } from 'react-spinners';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../App/store';
+import { saveAs } from 'file-saver';
 
 const AllPayments: React.FC = () => {
-  const { data: payments = [], isLoading, isError, error } = paymentApi.useGetAllPaymentsQuery({});
-  const [searchTerm, setSearchTerm] = useState('');
+  const { data: payments = [], isLoading: paymentsLoading } = paymentApi.useGetAllPaymentsQuery({});
+  const { data: bookings = [] } = bookingApi.useGetAllBookingsQuery();
+  const { data: events = [] } = eventApi.useGetAllEventsQuery({});
+  const { data: ticketTypes = [] } = ticketApi.useGetAllTicketTypesQuery({});
+
+  const [statusFilter, setStatusFilter] = useState('');
+  const [methodFilter, setMethodFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  const firstName = useSelector((state: RootState) => state.auth.user?.firstName);
+  // Enrich payment data
+  const enriched = useMemo(() => {
+    return payments.map((p: any) => {
+      const b = bookings.find((x: any) => x.bookingId === p.bookingId);
+      const ev = events.find((e: any) => b?.eventId === e.eventId);
+      const t = ticketTypes.find((t: any) => b?.ticketTypeId === t.ticketTypeId);
+      return {
+        ...p,
+        eventName: ev?.title ?? 'N/A',
+        ticketTypeName: t?.name ?? 'N/A',
+      };
+    });
+  }, [payments, bookings, events, ticketTypes]);
 
-  const filteredPayments = payments.filter(
-    (payment: any) =>
-      payment.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.bookingId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Apply filters
+  const filtered = useMemo(() => {
+    return enriched.filter((p: any) => {
+      const pd = new Date(p.paymentDate);
+      if (statusFilter && p.paymentStatus !== statusFilter) return false;
+      if (methodFilter && p.paymentMethod !== methodFilter) return false;
+      if (dateFrom && pd < new Date(dateFrom)) return false;
+      if (dateTo && pd > new Date(dateTo)) return false;
+      return true;
+    });
+  }, [enriched, statusFilter, methodFilter, dateFrom, dateTo]);
 
-  const totalPages = Math.ceil(filteredPayments.length / pageSize);
-  const currentPayments = filteredPayments.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / pageSize);
+  const paginated = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, currentPage]);
+
+  const totalRevenue = filtered.reduce((sum: number, p: any) => sum + Number(p.amount), 0);
+  const totalRevenueKES = (totalRevenue / 100).toFixed(2);
+
+  const exportCSV = () => {
+    const header = ['Txn ID','Booking ID','Event','Ticket Type','Amount (KES)','Status','Method','Date'];
+    const rows = filtered.map((p: any) => [
+      p.transactionId, p.bookingId, p.eventName, p.ticketTypeName,
+      (p.amount/100).toFixed(2), p.paymentStatus, p.paymentMethod, new Date(p.paymentDate).toLocaleString()
+    ]);
+    const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, 'payments.csv');
+  };
 
   return (
-    <div className="min-h-screen p-6 bg-base-100 text-base-content">
-      <div className="mb-6 text-xl sm:text-2xl font-semibold text-primary">
-        👋 Hey {firstName}, welcome to Payments Dashboard!
-      </div>
+    <div className="p-6 space-y-6 min-h-screen bg-base-100 text-base-content">
+      <h1 className="text-2xl font-bold">💳 Payments Analytics</h1>
 
-      <div className="w-full max-w-6xl mx-auto bg-base-200 rounded-xl border border-base-300 shadow-lg p-6">
-        <h2 className="text-3xl font-bold text-primary mb-6">💳 All Payments</h2>
-
-        {/* Search */}
-        <div className="mb-4 flex justify-between items-center">
-          <input
-            type="text"
-            placeholder="Search by Transaction or Booking ID"
-            className="input input-bordered w-full sm:w-64"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {/* Loading and Error */}
-        {isLoading && (
-          <div className="flex justify-center items-center h-64">
-            <PuffLoader color="#22d3ee" />
+      {paymentsLoading ? (
+        <div className="flex justify-center"><PuffLoader /></div>
+      ) : (
+        <>
+          {/* Total Revenue */}
+          <div className="bg-base-200 text-base-content p-4 rounded shadow border border-base-300">
+            <h2 className="text-lg font-semibold">Total Revenue</h2>
+            <p className="text-3xl font-bold">KES {totalRevenueKES}</p>
           </div>
-        )}
 
-        {isError && (
-          <p className="text-error text-center text-lg font-semibold">
-            Error: {(error as any)?.data?.error || 'Something went wrong.'}
-          </p>
-        )}
-
-        {/* Payments Table */}
-        {payments && currentPayments.length > 0 ? (
-          <>
-            <div className="overflow-x-auto">
-              <table className="table table-zebra text-sm">
-                <thead>
-                  <tr className="text-primary-content bg-primary text-xs uppercase">
-                    <th className="px-4 py-2">Transaction ID</th>
-                    <th className="px-4 py-2">Booking ID</th>
-                    <th className="px-4 py-2">Amount</th>
-                    <th className="px-4 py-2">Status</th>
-                    <th className="px-4 py-2">Method</th>
-                    <th className="px-4 py-2">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentPayments.map((payment: any) => (
-                    <tr key={payment.paymentId} className="hover:bg-base-300 transition duration-300 ease-in-out">
-                      <td className="px-4 py-2">{payment.transactionId}</td>
-                      <td className="px-4 py-2">{payment.bookingId}</td>
-                      <td className="px-4 py-2">${((Number(payment.amount) || 0) / 100).toFixed(2)}</td>
-                      <td className="px-4 py-2">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-semibold ${
-                            payment.paymentStatus === 'Completed'
-                              ? 'bg-green-600 text-white'
-                              : payment.paymentStatus === 'Pending'
-                              ? 'bg-yellow-500 text-black'
-                              : 'bg-red-600 text-white'
-                          }`}
-                        >
-                          {payment.paymentStatus}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2">{payment.paymentMethod || 'N/A'}</td>
-                      <td className="px-4 py-2">{new Date(payment.paymentDate).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* Filters */}
+          <div className="flex flex-wrap gap-4 items-end">
+            <div>
+              <label className="block mb-1">Status:</label>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="select select-bordered">
+                <option value="">All</option>
+                <option>Completed</option>
+                <option>Pending</option>
+                <option>Failed</option>
+              </select>
             </div>
-          </>
-        ) : (
-          !isLoading && <p className="text-teal-200 text-center">No payments found.</p>
-        )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
+            <div>
+              <label className="block mb-1">Method:</label>
+              <input
+                type="text"
+                placeholder="e.g. Mpesa"
+                value={methodFilter}
+                onChange={(e) => setMethodFilter(e.target.value)}
+                className="input input-bordered"
+              />
+            </div>
+
+            <div>
+              <label className="block mb-1">From:</label>
+              <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="input input-bordered" />
+            </div>
+            <div>
+              <label className="block mb-1">To:</label>
+              <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="input input-bordered" />
+            </div>
+
+            <button onClick={exportCSV} className="btn btn-primary mt-4">Export CSV</button>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="table table-zebra w-full">
+              <thead>
+                <tr className="bg-base-300 text-base-content">
+                  <th>Txn ID</th>
+                  <th>Booking ID</th>
+                  <th>Event</th>
+                  <th>Ticket Type</th>
+                  <th>Amount (KES)</th>
+                  <th>Status</th>
+                  <th>Method</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map((p: any) => (
+                  <tr key={p.paymentId}>
+                    <td>{p.transactionId}</td>
+                    <td>{p.bookingId}</td>
+                    <td>{p.eventName}</td>
+                    <td>{p.ticketTypeName}</td>
+                    <td>{(p.amount / 100).toFixed(2)}</td>
+                    <td>{p.paymentStatus}</td>
+                    <td>{p.paymentMethod}</td>
+                    <td>{new Date(p.paymentDate).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
           <div className="flex justify-between items-center mt-6">
             <button
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              className="btn btn-sm btn-secondary"
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              className="btn btn-sm btn-outline"
+              disabled={currentPage === 1}
             >
               Previous
             </button>
-            <div>
+
+            <span className="font-semibold">
               Page {currentPage} of {totalPages}
-            </div>
+            </span>
+
             <button
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-              className="btn btn-sm btn-secondary"
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              className="btn btn-sm btn-outline"
+              disabled={currentPage === totalPages}
             >
               Next
             </button>
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 };
