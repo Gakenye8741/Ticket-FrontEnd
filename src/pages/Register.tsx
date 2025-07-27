@@ -54,12 +54,14 @@ const Register = () => {
       return;
     }
 
-    try {
+    try {       
       const loadingToastId = toast.loading('🚀 Creating Account...');
-      await registerUser(parsedData).unwrap();
-      toast.success('✅ Account created successfully!', { id: loadingToastId });
-      navigate('/login');
-    } catch (error: any) {
+      const res = await registerUser(data).unwrap();
+      toast.success(res?.message, { id: loadingToastId });
+      navigate("/email-verification", {
+        state: { email: data.email, message: res?.message || "Please verify your email to complete registration." }
+      });
+        } catch (error: any) {
       const errorMessage =
         error?.data?.error || error?.error || '❌ Something went wrong. Please try again.';
       toast.error(`🚫 Failed to register: ${errorMessage}`);

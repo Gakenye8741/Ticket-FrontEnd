@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const userApi = createApi({
   reducerPath: 'userApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'https://ticket-backend-xv5a.onrender.com/api/' }),
+  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:5000/api/' }),
   tagTypes: ['users', 'user'],
   endpoints: (builder) => ({
     // 🟢 Auth: Login
@@ -20,6 +20,33 @@ export const userApi = createApi({
         url: 'auth/register',
         method: 'POST',
         body: userRegisterPayload,
+      }),
+    }),
+
+    // ✉️ Auth: Request password reset
+    requestPasswordReset: builder.mutation({
+      query: (emailPayload) => ({
+        url: 'auth/password-reset',
+        method: 'POST',
+        body: emailPayload, // { email: "user@example.com" }
+      }),
+    }),
+
+    // 🔐 Auth: Reset password with token
+    resetPassword: builder.mutation({
+      query: ({ token, newPasswordPayload }) => ({
+        url: `auth/reset/${token}`,
+        method: 'PUT',
+        body: newPasswordPayload, // { password: "newPassword123" }
+      }),
+    }),
+
+    // ✅ Auth: Verify email
+    verifyEmail: builder.mutation({
+      query: (verificationPayload) => ({
+        url: 'auth/verify-email',
+        method: 'PUT',
+        body: verificationPayload, // { token: "..." } or your defined payload
       }),
     }),
 
@@ -89,6 +116,7 @@ export const userApi = createApi({
     searchUsersWithDetails: builder.query({
       query: (lastName: string) => `details/users-search?lastName=${lastName}`,
     }),
+
   }),
 });
 
@@ -96,6 +124,9 @@ export const userApi = createApi({
 export const {
   useLoginUserMutation,
   useRegisterUserMutation,
+  useRequestPasswordResetMutation,
+  useResetPasswordMutation,
+  useVerifyEmailMutation,
   useGetAllUsersProfilesQuery,
   useGetUserByNationalIdQuery,
   useGetUserDetailsQuery,

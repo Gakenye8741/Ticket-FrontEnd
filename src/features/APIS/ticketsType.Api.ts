@@ -4,7 +4,7 @@ import type { RootState } from '../../App/store';
 export const ticketApi = createApi({
   reducerPath: 'ticketApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'https://ticket-backend-xv5a.onrender.com/api/', // Adjust to your backend URL
+    baseUrl: 'http://localhost:5000/api/', // Adjust to your backend URL
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as RootState).auth.token;
       if (token) {

@@ -27,6 +27,7 @@ import GetPaymentsByNationalId from './DashBoards/dashboard/GetPaymentsByNationa
 import AllPayments from './DashBoards/adminDashboard/GetAllPayments';
 import RootLayout from './DashBoards/dashboardDesign/RootLayout';
 import TicketDisplay from './DashBoards/dashboard/UserTickets';
+import EmailVerification from './pages/EmailVerification';
 
 function App() {
   const Router = createBrowserRouter([
@@ -41,6 +42,8 @@ function App() {
         { path: '/login', element: <Login /> },
         { path: '/register', element: <Register /> },
         { path: '/contact', element: <ContactForm /> },
+        { path: "/email-verification", element: <EmailVerification />,errorElement: <Error />,
+  },
       ],
     },
     {
