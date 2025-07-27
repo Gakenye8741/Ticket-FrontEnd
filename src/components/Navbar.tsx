@@ -25,7 +25,8 @@ export const Navbar = () => {
 
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
-  const firstName = useSelector((state: RootState) => state.auth.user?.firstName || "User");
+  const firstName =useSelector((state:RootState)=>state.auth.user?.firstName);
+  console.log(firstName);
   const role = useSelector((state: RootState) => state.auth.role);
 
   const isActive = (path: string) => location.pathname === path ? "text-primary font-bold" : "";
