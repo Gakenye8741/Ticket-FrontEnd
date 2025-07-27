@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const userApi = createApi({
   reducerPath: 'userApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:5000/api/' }),
+  baseQuery: fetchBaseQuery({ baseUrl: 'https://ticket-backend-xv5a.onrender.com/api/' }),
   tagTypes: ['users', 'user'],
   endpoints: (builder) => ({
     // 🟢 Auth: Login
