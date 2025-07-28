@@ -11,7 +11,6 @@ import ProtectedRoutes from './components/ProtectedRoutes';
 import Error from './pages/Error';
 import UserProfile from './DashBoards/dashboard/UserProfile';
 import { Analytics } from './DashBoards/adminDashboard/Analytics';
-import { AdminUserProfile } from './DashBoards/adminDashboard/AdminUserProfile';
 import { AllUsers } from './DashBoards/adminDashboard/AllUsers';
 import { AllVenues } from './DashBoards/adminDashboard/AllVenues';
 import { EventDetailsPage } from './DashBoards/adminDashboard/AllEvents';
@@ -31,6 +30,7 @@ import EmailVerification from './pages/EmailVerification';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/PasswordReset';
 import SalesReport from './DashBoards/adminDashboard/SalesReport';
+import AdminUserProfile from './DashBoards/adminDashboard/AdminUserProfile';
 
 function App() {
   const Router = createBrowserRouter([

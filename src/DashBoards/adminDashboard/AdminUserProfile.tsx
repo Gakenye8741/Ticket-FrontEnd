@@ -1,96 +1,70 @@
-import { useEffect, useState } from 'react';
-import { FaCamera, FaEdit, FaTimes } from 'react-icons/fa';
-import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { useForm, type SubmitHandler } from 'react-hook-form';
-import { SaveIcon } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useGetUserByNationalIdQuery, useUpdateUserMutation } from '../../features/APIS/UserApi';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../App/store';
+import { Moon, Sun } from 'lucide-react';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 
-import type { RootState } from '../../App/store';
-import { useUpdateUserMutation } from '../../features/APIS/UserApi';
-import { updateUserData } from '../../features/Auth/AuthSlice';
+const AdminUserProfile: React.FC = () => {
+  const nationalId = useSelector((state: RootState) => state.auth.user?.nationalId);
+  const { data: user, isLoading, refetch } = useGetUserByNationalIdQuery(nationalId!, { skip: !nationalId });
+  const [updateUser] = useUpdateUserMutation();
 
-interface FormValues {
-  firstName: string;
-  lastName: string;
-  email: string;
-  address: string;
-  password?: string;
-}
+  const [editMode, setEditMode] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    profileImageUrl: '',
+    role: '',
+  });
 
-export const AdminUserProfile = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { user, isAuthenticated, role } = useSelector((state: RootState) => state.auth);
-  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const CLOUD_NAME = 'dwibg4vvf';
   const UPLOAD_PRESET = 'tickets_Profile';
 
-  const handleModalToggle = () => setIsModalOpen((prev) => !prev);
-
-  const profilePicture =
-    user?.profile_picture ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.firstName || 'User')}&background=4ade80&color=fff&size=128`;
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   useEffect(() => {
-    if (!isAuthenticated || role !== 'admin') {
-      navigate('/login');
+    if (user) {
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        profileImageUrl: user.profileImageUrl || '',
+        role: user.role || '',
+      });
+      setPreviewUrl(user.profileImageUrl || '');
     }
-  }, [isAuthenticated, role, navigate]);
+  }, [user]);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<FormValues>({
-    defaultValues: {
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      email: user?.email || '',
-      address: user?.address || '',
-    },
-  });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    if (!user?.nationalId) return;
-
-    try {
-      const payload = { nationalId: user.nationalId, ...data };
-      const updatedUser = await updateUser(payload).unwrap();
-
-      dispatch(updateUserData(updatedUser));
-      handleModalToggle();
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Profile updated!',
-        toast: true,
-        timer: 2000,
-        position: 'top-end',
-        showConfirmButton: false,
-      });
-    } catch (error) {
-      console.error('Update failed:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Failed to update profile',
-        text: 'Please try again later.',
-      });
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user?.nationalId) return;
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return formData.profileImageUrl;
 
     const cloudFormData = new FormData();
-    cloudFormData.append('file', file);
+    cloudFormData.append('file', imageFile);
     cloudFormData.append('upload_preset', UPLOAD_PRESET);
 
     try {
@@ -107,177 +81,153 @@ export const AdminUserProfile = () => {
         }
       );
 
-      const cloudinaryUrl = response.data.secure_url;
-
-      // Send Cloudinary URL to backend
-      const updatedUser = await updateUser({
-        nationalId: user.nationalId,
-        profile_picture: cloudinaryUrl,
-      }).unwrap();
-
-      dispatch(updateUserData(updatedUser));
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Profile picture updated!',
-        toast: true,
-        timer: 2000,
-        position: 'top-end',
-        showConfirmButton: false,
-      });
+      return response.data.secure_url;
     } catch (error) {
       console.error('Image upload failed:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Failed to upload image',
-        text: 'Please try again later.',
-      });
-    } finally {
-      setUploadProgress(null);
+      Swal.fire('Error', 'Failed to upload profile image.', 'error');
+      return null;
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    let uploadedUrl = formData.profileImageUrl;
+    if (imageFile) {
+      const url = await uploadImage();
+      if (url) uploadedUrl = url;
+    }
+
+    try {
+      await updateUser({
+        nationalId: nationalId!,
+        ...formData,
+        profileImageUrl: uploadedUrl,
+      }).unwrap();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Profile Updated!',
+        text: 'Your changes have been saved.',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      setEditMode(false);
+      setImageFile(null);
+      setUploadProgress(0);
+      refetch();
+    } catch (err) {
+      console.error('Update failed:', err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: 'Something went wrong. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
+
+  if (isLoading || !user) return <div className="text-center">Loading user...</div>;
+
   return (
-    <div className="min-h-screen text-white py-10 px-5 bg-gray-900">
-      <div className="max-w-4xl mx-auto rounded-lg shadow-lg p-5 bg-gray-800">
-        <div className="flex flex-col md:flex-row items-center justify-between border-b border-gray-700 pb-5 mb-5">
-          <div className="relative flex items-center gap-4 mb-4 md:mb-0">
-            <img
-              src={user?.profile_picture || profilePicture}
-              alt="Profile"
-              className="w-24 h-24 rounded-full border-4 border-orange-500 object-cover"
-            />
-            <label className="absolute bottom-0 bg-orange-500 p-2 rounded-full cursor-pointer">
-              <FaCamera />
-              <input
-                type="file"
-                className="hidden"
-                onChange={handleFileChange}
-                accept="image/*"
-              />
-            </label>
-            <div>
-              <h2 className="text-3xl font-bold">{user?.firstName} {user?.lastName}</h2>
-              <p className="text-gray-400">{user?.email}</p>
-              {uploadProgress !== null && (
-                <p className="text-sm text-orange-400 mt-1">Uploading: {uploadProgress}%</p>
-              )}
-            </div>
-          </div>
-
-          <button
-            className="btn btn-warning flex items-center gap-2"
-            onClick={() => {
-              reset({
-                firstName: user?.firstName || '',
-                lastName: user?.lastName || '',
-                email: user?.email || '',
-                address: user?.address || '',
-                password: ''
-              });
-              handleModalToggle();
-            }}
-          >
-            <FaEdit /> Edit Profile
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-lg p-4">
-            <h3 className="text-2xl font-bold mb-3">Personal Information</h3>
-            <p className="mb-2"><span className="font-bold">First Name:</span> {user?.firstName}</p>
-            <p className="mb-2"><span className="font-bold">Last Name:</span> {user?.lastName}</p>
-            <p className="mb-2"><span className="font-bold">Address:</span> {user?.address || 'N/A'}</p>
-          </div>
-
-          <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-lg p-4">
-            <h3 className="text-2xl font-bold mb-3">Security Settings</h3>
-            <p className="mb-2"><span className="font-bold">Email:</span> {user?.email}</p>
-            <p className="mb-2"><span className="font-bold">Password:</span> ********</p>
-          </div>
-        </div>
+    <div className="max-w-xl mx-auto mt-10 p-6 rounded-xl shadow-lg bg-base-100 text-base-content">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">User Profile</h1>
+        <button onClick={toggleTheme} className="btn btn-circle btn-ghost">
+          {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+        </button>
       </div>
 
-      {isModalOpen && (
-        <div className="modal modal-open">
-          <div className="modal-box bg-gray-900 border border-orange-500 text-white">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-orange-500">Edit Profile</h2>
-              <button onClick={handleModalToggle} className="btn btn-sm btn-circle btn-ghost text-red-500">
-                <FaTimes />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-orange-400">First Name</label>
-                <input
-                  id="firstName"
-                  className="input input-bordered w-full text-black"
-                  {...register('firstName', { required: 'First name is required' })}
-                />
-                {errors.firstName && <p className="text-red-500">{errors.firstName.message}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-orange-400">Last Name</label>
-                <input
-                  id="lastName"
-                  className="input input-bordered w-full text-black"
-                  {...register('lastName', { required: 'Last name is required' })}
-                />
-                {errors.lastName && <p className="text-red-500">{errors.lastName.message}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-orange-400">Email</label>
-                <input
-                  id="email"
-                  type="email"
-                  className="input input-bordered w-full text-black"
-                  {...register('email', {
-                    required: 'Email is required',
-                    pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: 'Invalid email format',
-                    },
-                  })}
-                />
-                {errors.email && <p className="text-red-500">{errors.email.message}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="address" className="block text-sm font-medium text-orange-400">Address</label>
-                <input
-                  id="address"
-                  className="input input-bordered w-full text-black"
-                  {...register('address')}
+      <div className="flex flex-col items-center gap-4">
+        <img
+          src={previewUrl || '/default-avatar.png'}
+          alt="Profile"
+          className="w-32 h-32 rounded-full object-cover border"
+        />
+        {editMode && (
+          <>
+            <input type="file" accept="image/*" onChange={handleImageChange} className="mt-2" />
+            {uploadProgress > 0 && (
+              <div className="w-full bg-gray-300 h-2 rounded">
+                <div
+                  className="bg-blue-600 h-2 rounded transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
                 />
               </div>
+            )}
+          </>
+        )}
+        {!editMode && (
+          <h2 className="text-xl font-bold">
+            {user.firstName} {user.lastName}
+          </h2>
+        )}
+      </div>
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-orange-400">Password</label>
-                <input
-                  id="password"
-                  type="password"
-                  className="input input-bordered w-full text-black"
-                  placeholder="Leave blank to keep current password"
-                  {...register('password')}
-                />
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="btn btn-primary flex items-center gap-2"
-                  disabled={isUpdating}
-                >
-                  <SaveIcon size={18} />
-                  {isUpdating ? 'Saving...' : 'Save Profile'}
-                </button>
-              </div>
-            </form>
+      {editMode ? (
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <input
+            name="firstName"
+            placeholder="First Name"
+            value={formData.firstName}
+            onChange={handleChange}
+            className="input input-bordered w-full"
+            required
+          />
+          <input
+            name="lastName"
+            placeholder="Last Name"
+            value={formData.lastName}
+            onChange={handleChange}
+            className="input input-bordered w-full"
+            required
+          />
+          <input
+            name="email"
+            value={formData.email}
+            disabled
+            className="input input-bordered w-full bg-gray-100 cursor-not-allowed"
+          />
+          <input
+            name="role"
+            value={formData.role}
+            disabled
+            className="input input-bordered w-full bg-gray-100 cursor-not-allowed"
+          />
+          <div className="flex justify-end gap-4">
+            <button
+              type="button"
+              onClick={() => setEditMode(false)}
+              className="btn btn-outline"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </button>
           </div>
+        </form>
+      ) : (
+        <div className="mt-6 space-y-2 text-sm">
+          <p><strong>Email:</strong> {user.email}</p>
+          <p><strong>National ID:</strong> {user.nationalId}</p>
+          <p><strong>Role:</strong> {user.role || 'user'}</p>
+          <button
+            onClick={() => setEditMode(true)}
+            className="mt-4 btn btn-accent"
+          >
+            Edit Profile
+          </button>
         </div>
       )}
     </div>
