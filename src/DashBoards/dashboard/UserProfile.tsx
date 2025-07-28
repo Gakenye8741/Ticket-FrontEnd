@@ -1,151 +1,229 @@
-import { useEffect, useState } from 'react';
-import { FaCamera, FaEdit, FaTimes } from 'react-icons/fa';
-import { useSelector } from "react-redux";
-import { useNavigate } from 'react-router-dom';
-import { useForm, type SubmitHandler } from 'react-hook-form';
-
-import { SaveIcon } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useGetUserByNationalIdQuery, useUpdateUserMutation } from '../../features/APIS/UserApi';
+import { useSelector } from 'react-redux';
 import type { RootState } from '../../App/store';
+import { Moon, Sun } from 'lucide-react';
+import Swal from 'sweetalert2';
+import axios from 'axios';
 
+const UserProfile: React.FC = () => {
+  const nationalId = useSelector((state: RootState) => state.auth.user?.nationalId);
+  const { data: user, isLoading, refetch } = useGetUserByNationalIdQuery(nationalId!, { skip: !nationalId });
+  const [updateUser] = useUpdateUserMutation();
 
-interface FormValues {
-  firstName: string;
-  lastName: string;
-  email: string;
-  address: string;
-  password?: string;
-}
+  const [editMode, setEditMode] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    profileImageUrl: '',
+    role: '',
+  });
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-const UserProfile = () => {
-  
-  const navigate = useNavigate();
-  const { user, isAuthenticated, role } = useSelector((state: RootState) => state.auth);
-  const profilePicture = user?.profileUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName)}&background=4ade80&color=fff&size=128`;
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const handleModalToggle = () => {
-    setIsModalOpen(!isModalOpen);
-  };
+  const CLOUD_NAME = 'dwibg4vvf';
+  const UPLOAD_PRESET = 'tickets_Profile';
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    } else if (role !== 'admin') {
-      navigate('/dashboard/me');
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        profileImageUrl: user.profileImageUrl || '',
+        role: user.role || '',
+      });
+      setPreviewUrl(user.profileImageUrl || '');
     }
-  }, [isAuthenticated, role, navigate]);
+  }, [user]);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
-
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    console.log(data)
-
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return formData.profileImageUrl;
+
+    const cloudFormData = new FormData();
+    cloudFormData.append('file', imageFile);
+    cloudFormData.append('upload_preset', UPLOAD_PRESET);
+
+    try {
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        cloudFormData,
+        {
+          onUploadProgress: (progressEvent) => {
+            const percent = Math.round(
+              (progressEvent.loaded * 100) / (progressEvent.total || 1)
+            );
+            setUploadProgress(percent);
+          },
+        }
+      );
+
+      return response.data.secure_url;
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      Swal.fire('Error', 'Failed to upload profile image.', 'error');
+      return null;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const uploadedUrl = await uploadImage();
+
+    try {
+      await updateUser({
+        nationalId: nationalId!,
+        ...formData,
+        profileImageUrl: uploadedUrl || formData.profileImageUrl,
+      }).unwrap();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Profile Updated!',
+        text: 'Your changes have been saved.',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      setEditMode(false);
+      setImageFile(null);
+      setUploadProgress(0);
+      refetch();
+    } catch (err) {
+      console.error('Update failed:', err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: 'Something went wrong. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
+
+  if (isLoading || !user) return <div className="text-center">Loading user...</div>;
 
   return (
-    <div className="min-h-screen text-white py-10 px-5">
-      <div className="max-w-4xl mx-auto rounded-lg shadow-lg p-5">
-        <div className="flex flex-col md:flex-row items-center justify-between border-b border-gray-700 pb-5 mb-5">
-          <div className="relative flex items-center gap-4 mb-4 md:mb-0">
-            <img
-              src={user?.profileUrl || profilePicture}
-              alt="Profile"
-              className="w-24 h-24 rounded-full border-4 border-orange-500"
-            />
-            <label className="absolute bottom-0 bg-orange-500 p-2 rounded-full cursor-pointer">
-              <FaCamera />
-              <input type="file" className="hidden"  />
-            </label>
-            <div>
-              <h2 className="text-3xl font-bold">{user?.firtname}</h2>
-              <p className="text-gray-400">{user?.email}</p>
-            </div>
-          </div>
-          <button
-            className="btn btn-warning flex items-center gap-2"
-            onClick={handleModalToggle}
-          >
-            <FaEdit /> Edit Profile
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-lg p-4">
-            <h3 className="text-2xl font-bold mb-3">Personal Information</h3>
-            <p className="mb-2">
-              <span className="font-bold">First Name:</span> {user?.firstName}
-            </p>
-            <p className="mb-2">
-              <span className="font-bold">First Name:</span> {user?.lastName}
-            </p>
-          </div>
-          <div className="bg-gradient-to-r from-orange-600 to-amber-600 rounded-lg p-4">
-            <h3 className="text-2xl font-bold mb-3">Security Settings</h3>
-            <p className="mb-2">
-              <span className="font-bold">Password:</span> ********
-            </p>
-            <button className="btn btn-secondary">Change Password</button>
-          </div>
-
-        </div>
+    <div className="max-w-xl mx-auto mt-10 p-6 rounded-xl shadow-lg bg-base-100 text-base-content">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">User Profile</h1>
+        <button onClick={toggleTheme} className="btn btn-circle btn-ghost">
+          {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+        </button>
       </div>
 
-      {isModalOpen && (
-        <div className="modal modal-open">
-          <div className="modal-box">
-            <div className="flex justify-center items-center mb-4 ">
-              <h2 className="text-2xl font-bold text-orange-500 ">Edit Profile</h2>
-            </div>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <div className="mb-4">
-                <label htmlFor="firstName" className="block text-sm font-medium text-orange-500">Full Name</label>
-                <input
-                  type="text"
-                  id="firstName"
-                  className="input  w-full  text-blue-500 text-sm"
-                  defaultValue={user?.firstName}
-                  {...register('firstName', { required: 'firstName is required' })}
+      <div className="flex flex-col items-center gap-4">
+        <img
+          src={previewUrl || '/default-avatar.png'}
+          alt="Profile"
+          className="w-32 h-32 rounded-full object-cover border"
+        />
+        {editMode && (
+          <>
+            <input type="file" accept="image/*" onChange={handleImageChange} className="mt-2" />
+            {uploadProgress > 0 && (
+              <div className="w-full bg-gray-300 h-2 rounded">
+                <div
+                  className="bg-blue-600 h-2 rounded transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
                 />
-                {errors.firstName && <p className="text-red-500 text-sm">{errors.firstName.message}</p>}
               </div>
-              <div className="mb-4">
-                <label htmlFor="lastName" className="block text-sm font-medium text-orange-500">Last Name</label>
-                <input
-                  type="text"
-                  id="lastName"
-                  className="input  w-full  text-blue-500 text-sm"
-                  defaultValue={user?.lastName}
-                  {...register('lastName', { required: 'firstName is required' })}
-                />
-                {errors.lastName && <p className="text-red-500 text-sm">{errors.lastName.message}</p>}
-              </div>
-              <div className="mb-4">
-                <label htmlFor="email" className="block text-sm font-medium text-orange-500">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  disabled
-                  className="input input-bordered w-full bg-gray-900 border-gray-600 text-white"
-                  defaultValue={user?.email}
-                  {...register('email', { required: 'Email is required' })}
-                />
-                {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
-              </div>
-              
-              <div className="flex justify-end">
-                <button onClick={handleModalToggle} className=" btn mr-2 btn-error">
-                  <FaTimes /> Cancel
-                </button>
-                {/* <button type="submit" className="btn btn-primary" disabled={isLoading}> */}
-                <button type="submit" className="btn btn-primary" >                 
-                  <SaveIcon /> Save Profile  {/* {isLoading ? 'Updating...' : 'Update Profile'} */}
-                </button>
-              </div>
-            </form>
+            )}
+          </>
+        )}
+        {!editMode && (
+          <h2 className="text-xl font-bold">
+            {user.firstName} {user.lastName}
+          </h2>
+        )}
+      </div>
+
+      {editMode ? (
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <input
+            name="firstName"
+            placeholder="First Name"
+            value={formData.firstName}
+            onChange={handleChange}
+            className="input input-bordered w-full"
+            required
+          />
+          <input
+            name="lastName"
+            placeholder="Last Name"
+            value={formData.lastName}
+            onChange={handleChange}
+            className="input input-bordered w-full"
+            required
+          />
+          <input
+            name="email"
+            value={formData.email}
+            disabled
+            className="input input-bordered w-full bg-gray-100 cursor-not-allowed"
+          />
+          <input
+            name="role"
+            value={formData.role}
+            disabled
+            className="input input-bordered w-full bg-gray-100 cursor-not-allowed"
+          />
+          <div className="flex justify-end gap-4">
+            <button
+              type="button"
+              onClick={() => setEditMode(false)}
+              className="btn btn-outline"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </button>
           </div>
+        </form>
+      ) : (
+        <div className="mt-6 space-y-2 text-sm">
+          <p><strong>Email:</strong> {user.email}</p>
+          <p><strong>National ID:</strong> {user.nationalId}</p>
+          <p><strong>Role:</strong> {user.role || 'user'}</p>
+          <button
+            onClick={() => setEditMode(true)}
+            className="mt-4 btn btn-accent"
+          >
+            Edit Profile
+          </button>
         </div>
       )}
     </div>

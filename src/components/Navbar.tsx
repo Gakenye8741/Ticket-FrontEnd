@@ -15,8 +15,9 @@ import {
   UserCheck,
   Phone,
 } from "lucide-react";
-import { ThemeToggle } from "./ThemeToggle";
+
 import './animate.css';
+import { ThemeToggle } from "./ThemeToggle";
 
 export const Navbar = () => {
   const location = useLocation();

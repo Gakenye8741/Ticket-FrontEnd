@@ -5,9 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { SaveIcon } from 'lucide-react';
 import Swal from 'sweetalert2';
+import axios from 'axios';
+
 import type { RootState } from '../../App/store';
 import { useUpdateUserMutation } from '../../features/APIS/UserApi';
-import { updateUserData } from '../../features/Auth/AuthSlice'
+import { updateUserData } from '../../features/Auth/AuthSlice';
 
 interface FormValues {
   firstName: string;
@@ -24,6 +26,11 @@ export const AdminUserProfile = () => {
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+
+  const CLOUD_NAME = 'dwibg4vvf';
+  const UPLOAD_PRESET = 'tickets_Profile';
+
   const handleModalToggle = () => setIsModalOpen((prev) => !prev);
 
   const profilePicture =
@@ -35,7 +42,7 @@ export const AdminUserProfile = () => {
       navigate('/login');
     }
   }, [isAuthenticated, role, navigate]);
-   
+
   const {
     register,
     handleSubmit,
@@ -55,10 +62,9 @@ export const AdminUserProfile = () => {
 
     try {
       const payload = { nationalId: user.nationalId, ...data };
-
       const updatedUser = await updateUser(payload).unwrap();
 
-      dispatch(updateUserData(updatedUser)); // ✅ Update Redux
+      dispatch(updateUserData(updatedUser));
       handleModalToggle();
 
       Swal.fire({
@@ -79,36 +85,99 @@ export const AdminUserProfile = () => {
     }
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.nationalId) return;
+
+    const cloudFormData = new FormData();
+    cloudFormData.append('file', file);
+    cloudFormData.append('upload_preset', UPLOAD_PRESET);
+
+    try {
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        cloudFormData,
+        {
+          onUploadProgress: (progressEvent) => {
+            const percent = Math.round(
+              (progressEvent.loaded * 100) / (progressEvent.total || 1)
+            );
+            setUploadProgress(percent);
+          },
+        }
+      );
+
+      const cloudinaryUrl = response.data.secure_url;
+
+      // Send Cloudinary URL to backend
+      const updatedUser = await updateUser({
+        nationalId: user.nationalId,
+        profile_picture: cloudinaryUrl,
+      }).unwrap();
+
+      dispatch(updateUserData(updatedUser));
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Profile picture updated!',
+        toast: true,
+        timer: 2000,
+        position: 'top-end',
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to upload image',
+        text: 'Please try again later.',
+      });
+    } finally {
+      setUploadProgress(null);
+    }
+  };
+
   return (
     <div className="min-h-screen text-white py-10 px-5 bg-gray-900">
       <div className="max-w-4xl mx-auto rounded-lg shadow-lg p-5 bg-gray-800">
         <div className="flex flex-col md:flex-row items-center justify-between border-b border-gray-700 pb-5 mb-5">
           <div className="relative flex items-center gap-4 mb-4 md:mb-0">
             <img
-              src={user?.profileUrl || profilePicture}
+              src={user?.profile_picture || profilePicture}
               alt="Profile"
               className="w-24 h-24 rounded-full border-4 border-orange-500 object-cover"
             />
             <label className="absolute bottom-0 bg-orange-500 p-2 rounded-full cursor-pointer">
               <FaCamera />
-              <input type="file" className="hidden" />
+              <input
+                type="file"
+                className="hidden"
+                onChange={handleFileChange}
+                accept="image/*"
+              />
             </label>
             <div>
               <h2 className="text-3xl font-bold">{user?.firstName} {user?.lastName}</h2>
               <p className="text-gray-400">{user?.email}</p>
+              {uploadProgress !== null && (
+                <p className="text-sm text-orange-400 mt-1">Uploading: {uploadProgress}%</p>
+              )}
             </div>
           </div>
 
-          <button className="btn btn-warning flex items-center gap-2" onClick={() => {
-            reset({
-              firstName: user?.firstName || '',
-              lastName: user?.lastName || '',
-              email: user?.email || '',
-              address: user?.address || '',
-              password: ''
-            });
-            handleModalToggle();
-          }}>
+          <button
+            className="btn btn-warning flex items-center gap-2"
+            onClick={() => {
+              reset({
+                firstName: user?.firstName || '',
+                lastName: user?.lastName || '',
+                email: user?.email || '',
+                address: user?.address || '',
+                password: ''
+              });
+              handleModalToggle();
+            }}
+          >
             <FaEdit /> Edit Profile
           </button>
         </div>
