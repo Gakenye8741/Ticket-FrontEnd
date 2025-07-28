@@ -3,6 +3,7 @@ import TrueFocus from '../../animations/TextFocus';
 import { useSelector } from 'react-redux';
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { Puff } from 'react-loader-spinner';
 import type { RootState } from '../../App/store';
 import { eventApi } from '../../features/APIS/EventsApi';
 
@@ -63,10 +64,9 @@ function App() {
         className="absolute inset-0 bg-cover bg-center opacity-10 dark:opacity-20"
         style={{ backgroundImage: `url(${backgroundImage})` }}
       />
-
       <div className="absolute inset-0 bg-base-100/60 backdrop-blur z-10" />
 
-      <div className="relative z-20 text-center px-6">
+      <div className="relative z-20 text-center px-6 animate-fadeIn">
         <TrueFocus
           sentence="TicketStream 🎫 Events And Ticketing Management System"
           manualMode={false}
@@ -76,12 +76,12 @@ function App() {
           pauseBetweenAnimations={2}
         />
 
-        <div className="mt-12 bg-base-200/80 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-base-300 max-w-6xl mx-auto flex flex-col md:flex-row gap-8">
-          <div className="flex-1 text-left">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-primary mb-6">
+        <div className="mt-12 bg-base-200/80 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-base-300 max-w-6xl mx-auto flex flex-col md:flex-row gap-8 animate-fadeInUp">
+          <div className="flex-1 text-left space-y-4">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-primary animate-fadeInUp">
               {greeting}, {firstName}
             </h1>
-            <p className="mb-6 leading-relaxed">
+            <p className="leading-relaxed animate-fadeInUp">
               Welcome to <span className="text-accent font-semibold">TicketStream 🎫</span> — your ultimate platform for effortless event and ticketing management.
               <br />
               <br />
@@ -89,36 +89,48 @@ function App() {
             </p>
             <Link
               to="/events"
-              className="btn btn-primary font-bold py-2 px-6 rounded-xl shadow transition"
+              className="btn btn-primary font-bold py-2 px-6 rounded-xl shadow transition animate-fadeInUp"
             >
               Get Started
             </Link>
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 space-y-4">
             <input
               type="text"
               placeholder="Search events by title..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="input input-bordered w-full mb-4 text-base-content"
+              className="input input-bordered w-full text-base-content animate-fadeInUp"
             />
 
-            {isLoading && <p className="text-primary">Loading events...</p>}
+            {isLoading && (
+              <div className="flex justify-center items-center py-10 animate-fadeIn">
+                <Puff
+                  height={60}
+                  width={60}
+                  radius={1}
+                  color="#06b6d4"
+                  ariaLabel="loading-events"
+                  visible={true}
+                />
+              </div>
+            )}
+
             {isError && (
-              <p className="text-error">
+              <p className="text-error animate-fadeIn">
                 {(error as { status?: string })?.status || 'Failed to load events'}
               </p>
             )}
 
             {!isLoading && hasSearch && filteredEvents.length > 0 && (
               <>
-                <p className="text-success mb-2">
+                <p className="text-success mb-2 animate-fadeInUp">
                   Showing {filteredEvents.length} matching upcoming event{filteredEvents.length > 1 ? 's' : ''} for “{search}”.
                 </p>
                 <Link
                   to="/events"
-                  className="btn btn-accent mb-4"
+                  className="btn btn-accent mb-4 animate-fadeInUp"
                 >
                   View All Events
                 </Link>
@@ -126,18 +138,25 @@ function App() {
             )}
 
             {!isLoading && hasSearch && filteredEvents.length === 0 && (
-              <p className="text-error">No matching upcoming events found.</p>
+              <p className="text-error animate-fadeInUp">No matching upcoming events found.</p>
             )}
 
             {!isLoading && filteredEvents.length > 0 && (
-              <ul className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                {filteredEvents.map((evt: any) => (
+              <ul className="space-y-2 max-h-60 overflow-y-auto pr-2 animate-fadeInUp">
+                {filteredEvents.map((evt: any, idx: number) => (
                   <li
                     key={getEventId(evt)}
                     className="bg-base-300/50 px-4 py-2 rounded hover:bg-base-300 transition"
+                    style={{ animationDelay: `${idx * 100}ms` }}
                   >
-                    <Link to={`/events/${getEventId(evt)}`} className="block">
-                      {evt.title}
+                    <Link
+                      to={`/events/${getEventId(evt)}`}
+                      className="flex justify-between items-center group transition duration-300"
+                    >
+                      <span>{evt.title}</span>
+                      <span className="text-xl text-primary transform transition-transform duration-300 group-hover:translate-x-2 group-hover:scale-110">
+                        →
+                      </span>
                     </Link>
                   </li>
                 ))}

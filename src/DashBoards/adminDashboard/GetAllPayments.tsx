@@ -16,11 +16,10 @@ const AllPayments: React.FC = () => {
   const [methodFilter, setMethodFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
 
-  // Enrich payment data
+  const pageSize = 5;
+
   const enriched = useMemo(() => {
     return payments.map((p: any) => {
       const b = bookings.find((x: any) => x.bookingId === p.bookingId);
@@ -34,9 +33,8 @@ const AllPayments: React.FC = () => {
     });
   }, [payments, bookings, events, ticketTypes]);
 
-  // Apply filters
   const filtered = useMemo(() => {
-    return enriched.filter((p: any) => {
+    const result = enriched.filter((p: any) => {
       const pd = new Date(p.paymentDate);
       if (statusFilter && p.paymentStatus !== statusFilter) return false;
       if (methodFilter && p.paymentMethod !== methodFilter) return false;
@@ -44,17 +42,34 @@ const AllPayments: React.FC = () => {
       if (dateTo && pd > new Date(dateTo)) return false;
       return true;
     });
+
+    // Sort by latest first
+    return result.sort((a: any, b: any) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
   }, [enriched, statusFilter, methodFilter, dateFrom, dateTo]);
 
-  // Pagination
   const totalPages = Math.ceil(filtered.length / pageSize);
   const paginated = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filtered.slice(start, start + pageSize);
   }, [filtered, currentPage]);
 
-  const totalRevenue = filtered.reduce((sum: number, p: any) => sum + Number(p.amount), 0);
-  const totalRevenueKES = (totalRevenue / 100).toFixed(2);
+  // Revenue helpers
+  const calcTotal = (filterFn: (d: Date) => boolean) => {
+    return filtered
+      .filter((p: any) => filterFn(new Date(p.paymentDate)))
+      .reduce((sum: number, p: any) => sum + Number(p.amount), 0) / 100;
+  };
+
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(startOfDay);
+  startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay()); // Sunday
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const totalRevenue = filtered.reduce((sum: number, p: any) => sum + Number(p.amount), 0) / 100;
+  const totalToday = calcTotal((d) => d >= startOfDay);
+  const totalWeek = calcTotal((d) => d >= startOfWeek);
+  const totalMonth = calcTotal((d) => d >= startOfMonth);
 
   const exportCSV = () => {
     const header = ['Txn ID','Booking ID','Event','Ticket Type','Amount (KES)','Status','Method','Date'];
@@ -75,10 +90,24 @@ const AllPayments: React.FC = () => {
         <div className="flex justify-center"><PuffLoader /></div>
       ) : (
         <>
-          {/* Total Revenue */}
-          <div className="bg-base-200 text-base-content p-4 rounded shadow border border-base-300">
-            <h2 className="text-lg font-semibold">Total Revenue</h2>
-            <p className="text-3xl font-bold">KES {totalRevenueKES}</p>
+          {/* Revenue Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-base-200 p-4 rounded shadow border border-base-300">
+              <h2 className="text-lg font-semibold">Total Revenue</h2>
+              <p className="text-2xl font-bold">KES {totalRevenue.toFixed(2)}</p>
+            </div>
+            <div className="bg-base-200 p-4 rounded shadow border border-base-300">
+              <h2 className="text-lg font-semibold">Today</h2>
+              <p className="text-2xl font-bold">KES {totalToday.toFixed(2)}</p>
+            </div>
+            <div className="bg-base-200 p-4 rounded shadow border border-base-300">
+              <h2 className="text-lg font-semibold">This Week</h2>
+              <p className="text-2xl font-bold">KES {totalWeek.toFixed(2)}</p>
+            </div>
+            <div className="bg-base-200 p-4 rounded shadow border border-base-300">
+              <h2 className="text-lg font-semibold">This Month</h2>
+              <p className="text-2xl font-bold">KES {totalMonth.toFixed(2)}</p>
+            </div>
           </div>
 
           {/* Filters */}
