@@ -40,6 +40,9 @@ const BookingsByNationalId: React.FC = () => {
   const [searchNationalId, setSearchNationalId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const bookingsPerPage = 10;
+
   const {
     data: bookings,
     error,
@@ -198,7 +201,6 @@ const BookingsByNationalId: React.FC = () => {
     }
   };
 
-  // ✅ FINAL UPDATED handlePayNow WITH MODAL
   const handlePayNow = async (booking: BookingData) => {
     if (!user?.nationalId) {
       Swal.fire("Error", "You must be logged in to pay.", "error");
@@ -257,10 +259,19 @@ const BookingsByNationalId: React.FC = () => {
     return "Error loading bookings.";
   };
 
-  const filteredBookings = bookings?.filter((booking: BookingData) => {
+  const sortedBookings = [...(bookings || [])].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  const filteredBookings = sortedBookings.filter((booking: BookingData) => {
     const event = events?.find((e: EventData) => e.eventId === booking.eventId);
     return event?.title.toLowerCase().includes(searchTerm.toLowerCase());
   });
+
+  const indexOfLast = currentPage * bookingsPerPage;
+  const indexOfFirst = indexOfLast - bookingsPerPage;
+  const currentBookings = filteredBookings.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage);
 
   return (
     <div className="min-h-screen p-6 bg-base-100 mt-20">
@@ -289,7 +300,7 @@ const BookingsByNationalId: React.FC = () => {
 
           {renderError() && <p className="text-error">{renderError()}</p>}
 
-          {isSuccess && filteredBookings?.length ? (
+          {isSuccess && currentBookings.length ? (
             <div className="overflow-x-auto rounded-lg my-4 animate-fadeIn transition-all duration-700">
               <table className="table table-zebra text-sm bg-base-100 rounded-lg">
                 <thead className="text-xs uppercase bg-base-200 text-primary font-semibold">
@@ -306,7 +317,7 @@ const BookingsByNationalId: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredBookings.map((booking: BookingData) => {
+                  {currentBookings.map((booking: BookingData) => {
                     const event = events?.find((e: EventData) => e.eventId === booking.eventId);
                     const ticket = ticketTypes?.find(
                       (t: TicketTypeData) => t.ticketTypeId === booking.ticketTypeId
@@ -358,6 +369,35 @@ const BookingsByNationalId: React.FC = () => {
                   })}
                 </tbody>
               </table>
+
+              {/* ✅ Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-4 gap-2">
+                  <button
+                    className="btn btn-sm"
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Prev
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`btn btn-sm ${currentPage === i + 1 ? "btn-active" : ""}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  <button
+                    className="btn btn-sm"
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             !isLoading && <p className="text-info">No bookings found.</p>

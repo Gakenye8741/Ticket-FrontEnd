@@ -61,35 +61,28 @@ const ticketVariants = {
 
 const UserSupportTickets = () => {
   const nationalId = useSelector((state: RootState) => state.auth.user?.nationalId);
-
   const { data: tickets = [], refetch, isLoading } = useGetSupportTicketsByNationalIdQuery(nationalId);
   const [createTicket, { isLoading: isSubmitting }] = useCreateSupportTicketMutation();
   const [updateTicket] = useUpdateSupportTicketMutation();
   const [deleteTicket] = useDeleteSupportTicketMutation();
 
-  const [form, setForm] = useState({
-    subject: '',
-    description: '',
-    priority: 'Medium',
-  });
-
+  const [form, setForm] = useState({ subject: '', description: '', priority: 'Medium' });
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const isEdit = editingId !== null;
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'All' | 'Pending' | 'Completed'>('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   const resetForm = () => {
-    setForm({
-      subject: '',
-      description: '',
-      priority: 'Medium',
-    });
+    setForm({ subject: '', description: '', priority: 'Medium' });
     setEditingId(null);
     setIsModalOpen(false);
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -113,11 +106,7 @@ const UserSupportTickets = () => {
   };
 
   const handleEdit = (ticket: SupportTicket) => {
-    setForm({
-      subject: ticket.subject,
-      description: ticket.description,
-      priority: ticket.priority,
-    });
+    setForm({ subject: ticket.subject, description: ticket.description, priority: ticket.priority });
     setEditingId(ticket.ticketId);
     setIsModalOpen(true);
   };
@@ -140,101 +129,149 @@ const UserSupportTickets = () => {
         await deleteTicket(ticketId).unwrap();
         toast.success('Ticket deleted successfully');
         refetch();
-      } catch (err) {
-        console.error('Failed to delete ticket:', err);
+      } catch {
         toast.error('Failed to delete ticket');
       }
     }
   };
 
+  const filteredTickets = tickets.filter((ticket: any) => {
+    const status = ticket.status?.toLowerCase();
+    const matchesFilter =
+      filterStatus === 'All' ||
+      (filterStatus === 'Pending' && status === 'open') ||
+      (filterStatus === 'Completed' && ['resolved', 'closed'].includes(status));
+    const matchesSearch =
+      ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.description.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  const totalPages = Math.ceil(filteredTickets.length / itemsPerPage);
+  const paginatedTickets = filteredTickets.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 mt-15">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-base-content underline">Support Tickets</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="btn btn-primary"
+        <button onClick={() => setIsModalOpen(true)} className="btn btn-primary">+ New Ticket</button>
+      </div>
+
+      {/* Search + Filter */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+        <input
+          type="text"
+          placeholder="Search tickets..."
+          className="input input-bordered w-full md:max-w-xs"
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1);
+          }}
+        />
+        <select
+          className="select select-bordered w-full md:max-w-xs"
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value as any);
+            setCurrentPage(1);
+          }}
         >
-          + New Ticket
-        </button>
+          <option value="All">All Tickets</option>
+          <option value="Pending">Pending</option>
+          <option value="Completed">Completed</option>
+        </select>
       </div>
 
       {isLoading ? (
-        <p className="flex justify-center items-center min-h-screen">
-          <PuffLoader />
-        </p>
-      ) : tickets.length === 0 ? (
-        <p className="text-base-content/60">No tickets found.</p>
+        <p className="flex justify-center items-center min-h-screen"><PuffLoader /></p>
+      ) : filteredTickets.length === 0 ? (
+        <p className="text-base-content/60 text-center mt-8">No matching tickets found.</p>
       ) : (
-        <ul className="space-y-6">
-          <AnimatePresence>
-            {tickets.map((ticket: SupportTicket) => {
-              const lowerStatus = ticket.status?.toLowerCase();
-              const canEdit = lowerStatus === 'open';
-              const canDelete = ['open', 'closed', 'resolved'].includes(lowerStatus);
-
-              return (
-                <motion.li
-                  key={ticket.ticketId}
-                  variants={ticketVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  layout
-                  transition={{ duration: 0.3 }}
-                  className="bg-base-100 border border-base-300 rounded-lg shadow p-4 text-base-content"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="w-full">
-                      <h3 className="text-lg font-semibold">{ticket.subject}</h3>
-                      <p className="mt-1">{ticket.description}</p>
-                      <p className="text-sm mt-2 opacity-70">
-                        <span className="font-medium">Priority:</span> {ticket.priority} |{' '}
-                        <span className="font-medium">Status:</span> {ticket.status} |{' '}
-                        <span className="font-bold">Created At:</span>{' '}
-                        {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : 'N/A'}
-                      </p>
-
-                      <AdminResponses ticketId={ticket.ticketId} />
+        <>
+          <ul className="space-y-6">
+            <AnimatePresence>
+              {paginatedTickets.map((ticket: SupportTicket) => {
+                const lowerStatus = ticket.status?.toLowerCase();
+                const canEdit = lowerStatus === 'open';
+                const canDelete = ['open', 'closed', 'resolved'].includes(lowerStatus);
+                return (
+                  <motion.li
+                    key={ticket.ticketId}
+                    variants={ticketVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    layout
+                    transition={{ duration: 0.3 }}
+                    className="bg-base-100 border border-base-300 rounded-lg shadow p-4 text-base-content"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="w-full">
+                        <h3 className="text-lg font-semibold">{ticket.subject}</h3>
+                        <p className="mt-1">{ticket.description}</p>
+                        <p className="text-sm mt-2 opacity-70">
+                          <span className="font-medium">Priority:</span> {ticket.priority} |{' '}
+                          <span className="font-medium">Status:</span> {ticket.status} |{' '}
+                          <span className="font-bold">Created At:</span>{' '}
+                          {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : 'N/A'}
+                        </p>
+                        <AdminResponses ticketId={ticket.ticketId} />
+                      </div>
+                      <div className="flex gap-2 pl-4">
+                        <button
+                          onClick={() => canEdit && handleEdit(ticket)}
+                          className={`btn btn-circle btn-ghost ${
+                            canEdit ? 'text-warning' : 'text-base-300 cursor-not-allowed'
+                          }`}
+                          disabled={!canEdit}
+                          title={canEdit ? 'Edit Ticket' : 'Only open tickets can be edited'}
+                        >
+                          <Pencil size={18} />
+                        </button>
+                        <button
+                          onClick={() => canDelete && handleDelete(ticket.ticketId)}
+                          className={`btn btn-circle btn-ghost ${
+                            canDelete ? 'text-error' : 'text-base-300 cursor-not-allowed'
+                          }`}
+                          disabled={!canDelete}
+                          title="Delete Ticket"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-2 pl-4">
-                      <button
-                        onClick={() => canEdit && handleEdit(ticket)}
-                        className={`btn btn-circle btn-ghost ${
-                          canEdit ? 'text-warning' : 'text-base-300 cursor-not-allowed'
-                        }`}
-                        disabled={!canEdit}
-                        title={
-                          canEdit ? 'Edit Ticket' : 'Only tickets with status "open" can be edited'
-                        }
-                      >
-                        <Pencil size={18} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (canDelete) handleDelete(ticket.ticketId);
-                        }}
-                        className={`btn btn-circle btn-ghost ${
-                          canDelete ? 'text-error' : 'text-base-300 cursor-not-allowed'
-                        }`}
-                        disabled={!canDelete}
-                        title={
-                          canDelete
-                            ? 'Delete Ticket'
-                            : 'Only open, closed, or resolved tickets can be deleted'
-                        }
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                </motion.li>
-              );
-            })}
-          </AnimatePresence>
-        </ul>
+                  </motion.li>
+                );
+              })}
+            </AnimatePresence>
+          </ul>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-6 gap-2 flex-wrap">
+              {[...Array(totalPages)].map((_, idx) => {
+                const page = idx + 1;
+                return (
+                  <button
+                    key={page}
+                    className={`btn btn-sm ${currentPage === page ? 'btn-primary' : 'btn-outline'}`}
+                    onClick={() => setCurrentPage(page)}
+                    disabled={currentPage === page}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
 
+      {/* Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
@@ -250,15 +287,10 @@ const UserSupportTickets = () => {
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
               className="bg-base-100 text-base-content w-full max-w-xl p-6 rounded-xl shadow-xl relative border border-base-300"
             >
-              <button
-                onClick={resetForm}
-                className="absolute top-3 right-4 text-base-content hover:text-error text-2xl font-bold"
-              >
+              <button onClick={resetForm} className="absolute top-3 right-4 text-base-content hover:text-error text-2xl font-bold">
                 &times;
               </button>
-              <h2 className="text-2xl font-bold mb-4">
-                {isEdit ? 'Edit Ticket' : 'New Support Ticket'}
-              </h2>
+              <h2 className="text-2xl font-bold mb-4">{isEdit ? 'Edit Ticket' : 'New Support Ticket'}</h2>
               <form onSubmit={handleSubmit}>
                 <label className="block mb-1 text-sm font-medium">Subject</label>
                 <input
@@ -269,7 +301,6 @@ const UserSupportTickets = () => {
                   className="input input-bordered w-full mb-4"
                   placeholder="Enter subject"
                 />
-
                 <label className="block mb-1 text-sm font-medium">Description</label>
                 <textarea
                   name="description"
@@ -280,7 +311,6 @@ const UserSupportTickets = () => {
                   className="textarea textarea-bordered w-full mb-4"
                   placeholder="Describe your issue..."
                 />
-
                 <label className="block mb-1 text-sm font-medium">Priority</label>
                 <select
                   name="priority"
@@ -292,22 +322,11 @@ const UserSupportTickets = () => {
                   <option>Medium</option>
                   <option>High</option>
                 </select>
-
                 <div className="flex justify-end gap-2">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="btn btn-primary"
-                  >
+                  <button type="submit" disabled={isSubmitting} className="btn btn-primary">
                     {isEdit ? 'Update' : 'Submit'}
                   </button>
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="btn btn-ghost"
-                  >
-                    Cancel
-                  </button>
+                  <button type="button" onClick={resetForm} className="btn btn-ghost">Cancel</button>
                 </div>
               </form>
             </motion.div>

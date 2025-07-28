@@ -17,6 +17,36 @@ const GetPaymentsByNationalId: React.FC = () => {
     skip: !nationalId,
   });
 
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [statusFilter, setStatusFilter] = React.useState<string>('All');
+
+  const paymentsPerPage = 10;
+
+  // ✅ Filter payments by "Completed" or "Pending"
+  const filteredPayments = payments
+    ? payments.filter((p: any) => {
+        if (statusFilter === 'All') return true;
+        if (statusFilter === 'Completed') return p.paymentStatus === 'Completed';
+        if (statusFilter === 'Pending') return p.paymentStatus === 'Pending';
+        return false;
+      })
+    : [];
+
+  // ✅ Sort from latest to oldest
+  const sortedPayments = [...filteredPayments].sort(
+    (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
+  );
+
+  // ✅ Paginate
+  const indexOfLast = currentPage * paymentsPerPage;
+  const indexOfFirst = indexOfLast - paymentsPerPage;
+  const currentPayments = sortedPayments.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(sortedPayments.length / paymentsPerPage);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -29,7 +59,20 @@ const GetPaymentsByNationalId: React.FC = () => {
           <h2 className="text-2xl font-semibold text-primary mb-2 text-center">
             👋 Hey {firstName || 'there'}, welcome back!
           </h2>
-          <h2 className="text-3xl font-bold mb-6 text-primary text-center">💳 My Payments</h2>
+          <h2 className="text-3xl font-bold mb-4 text-primary text-center">💳 My Payments</h2>
+
+          {/* ✅ Filter Dropdown */}
+          <div className="flex justify-center mb-6">
+            <select
+              className="select select-bordered max-w-xs"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="All">All</option>
+              <option value="Completed">Completed</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
 
           {isLoading && <p className="text-center text-base-content">Loading your payments...</p>}
           {isError && (
@@ -38,7 +81,7 @@ const GetPaymentsByNationalId: React.FC = () => {
             </p>
           )}
 
-          {payments && payments.length > 0 ? (
+          {payments && sortedPayments.length > 0 ? (
             <div className="overflow-x-auto animate-fadeIn">
               <table className="min-w-full text-sm text-left text-base-content border-separate border-spacing-y-2">
                 <thead className="text-xs uppercase bg-base-200 text-primary font-semibold">
@@ -52,7 +95,7 @@ const GetPaymentsByNationalId: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {payments.map((payment: any) => (
+                  {currentPayments.map((payment: any) => (
                     <motion.tr
                       key={payment.paymentId}
                       whileHover={{ scale: 1.01 }}
@@ -83,11 +126,40 @@ const GetPaymentsByNationalId: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+
+              {/* ✅ Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-4 gap-2">
+                  <button
+                    className="btn btn-sm"
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Prev
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`btn btn-sm ${currentPage === i + 1 ? 'btn-active' : ''}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  <button
+                    className="btn btn-sm"
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             !isLoading && (
               <p className="text-center text-slate-500 mt-4">
-                You have no payments on record.
+                No payments found for selected status.
               </p>
             )
           )}
