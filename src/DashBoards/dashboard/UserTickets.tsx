@@ -11,7 +11,6 @@ import { ticketApi } from '../../features/APIS/ticketsType.Api';
 import TicketItem from './TicketsItem';
 import type { RootState } from '../../App/store';
 
-
 interface EnrichedBooking {
   bookingId: number;
   eventName: string;
@@ -38,11 +37,12 @@ const TicketDisplay: React.FC = () => {
 
   const [sendTicketEmail, { isLoading: isEmailSending }] = emailApi.useSendTicketEmailMutation();
 
-  const isLoading = isBookingsLoading || isUserLoading || isEventsLoading || isTicketTypesLoading;
+  const isLoading =
+    isBookingsLoading || isUserLoading || isEventsLoading || isTicketTypesLoading;
 
   const enrichedBookings: EnrichedBooking[] | undefined = bookings?.map((booking) => {
-    const event = events?.find((e:any) => e.eventId === booking.eventId);
-    const ticketType = ticketTypes?.find((t:any) => t.ticketTypeId === booking.ticketTypeId);
+    const event = events?.find((e: any) => e.eventId === booking.eventId);
+    const ticketType = ticketTypes?.find((t: any) => t.ticketTypeId === booking.ticketTypeId);
 
     return {
       bookingId: booking.bookingId,
@@ -69,42 +69,45 @@ const TicketDisplay: React.FC = () => {
     }
   };
 
+  // Loader UI
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-base-100">
         <PuffLoader size={80} color="#4f46e5" />
       </div>
     );
   }
 
+  // No bookings fallback
   if (!bookings || bookings.length === 0) {
     return (
-      <div className="text-center text-gray-600 mt-10 text-lg">
+      <div className="text-center text-base-content mt-10 text-lg">
         No bookings found for this user.
       </div>
     );
   }
 
-  return (
-    <div className="p-6 space-y-8 max-w-3xl mx-auto mt-20">
-      <div className="flex justify-end">
-        <button
-          onClick={handleSendEmail}
-          disabled={isEmailSending}
-          className={`px-4 py-2 rounded transition ${
-            isEmailSending
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-          }`}
-        >
-          {isEmailSending ? 'Sending...' : 'Email My Tickets'}
-        </button>
-      </div>
+  // Final UI
+ return (
+  <div className="p-6 space-y-8 max-w-7xl mx-auto mt-20 bg-base-100 text-base-content rounded-box shadow">
+    <div className="flex justify-end">
+      <button
+        onClick={handleSendEmail}
+        disabled={isEmailSending}
+        className={`btn btn-primary ${isEmailSending ? 'btn-disabled loading' : ''}`}
+      >
+        {isEmailSending ? 'Sending...' : 'Email My Tickets'}
+      </button>
+    </div>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {enrichedBookings?.map((booking) => (
         <TicketItem key={booking.bookingId} booking={booking} user={user!} />
       ))}
     </div>
-  );
+  </div>
+);
+
 };
 
 export default TicketDisplay;

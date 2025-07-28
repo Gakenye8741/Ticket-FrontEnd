@@ -27,7 +27,7 @@ const Login = () => {
       const res = await LoginUser(data).unwrap();
       toast.success('✅ Logged in successfully', { id: loadingToastId });
       Dispatch(setCredentials(res));
-      navigate(res.role === 'admin' ? '/AdminDashboard/analytics' : '/Dashboard/MyBookings');
+      navigate(res.role === 'admin' ? '/AdminDashboard/analytics' : '/');
     } catch (error: any) {
       const ErrorMessage = error?.data?.error?.error || error?.data?.error || error?.error || '❌ Something went wrong. Please try again.';
       toast.error(`Failed to login: ${ErrorMessage}`, { id: loadingToastId });

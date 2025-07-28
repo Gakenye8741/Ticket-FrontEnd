@@ -95,17 +95,17 @@ const EventCard = ({
           📍 <span>{event.venue?.address || "N/A"}</span>
         </div>
         <div className="flex flex-col items-center text-center">
-          👥 <span>{event.venue?.capacity ?? "N/A"}</span>
+          👥 capapcity<span>{event.venue?.capacity ?? "N/A"}</span>
         </div>
         <div className="flex flex-col items-center text-center">
           🏷️ <span>{event.category || "Uncategorized"}</span>
         </div>
-        <div className="flex flex-col items-center text-center">
+        {/* <div className="flex flex-col items-center text-center">
           🎟️ <span>Sold: {event.ticketsSold}</span>
         </div>
         <div className="flex flex-col items-center text-center">
           🎟️ <span>Available: {event.ticketsTotal - event.ticketsSold}</span>
-        </div>
+        </div> */}
       </div>
 
       {isAuthenticated ? (

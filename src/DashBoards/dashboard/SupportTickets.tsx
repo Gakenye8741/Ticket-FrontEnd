@@ -31,19 +31,19 @@ const AdminResponses = ({ ticketId }: { ticketId: number }) => {
   if (isLoading || responses.length === 0) return null;
 
   return (
-    <div className="mt-4 bg-white/10 p-4 rounded-lg shadow-inner border border-white/10">
-      <h4 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
-        <MessageSquare size={18} className="text-white/70" />
+    <div className="mt-4 bg-base-200 p-4 rounded-lg shadow-inner border border-base-300">
+      <h4 className="text-base font-semibold text-base-content mb-3 flex items-center gap-2">
+        <MessageSquare size={18} className="opacity-70" />
         Admin Responses
       </h4>
       <ul className="space-y-3">
         {responses.map((res) => (
           <li
             key={res.responseId}
-            className="bg-white/5 p-3 rounded-md text-sm border border-white/10 hover:bg-white/10 transition"
+            className="bg-base-300 p-3 rounded-md text-sm border border-base-300 hover:bg-base-100 transition"
           >
-            <p className="text-white leading-relaxed">{res.message}</p>
-            <p className="text-xs text-white/60 mt-2 italic">
+            <p className="text-base-content leading-relaxed">{res.message}</p>
+            <p className="text-xs opacity-60 mt-2 italic">
               {new Date(res.createdAt).toLocaleString()}
             </p>
           </li>
@@ -148,12 +148,12 @@ const UserSupportTickets = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 mt-15" >
+    <div className="max-w-6xl mx-auto px-4 py-6 mt-15">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-100 underline">Support Tickets</h1>
+        <h1 className="text-3xl font-bold text-base-content underline">Support Tickets</h1>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow-md hover:opacity-90 transition"
+          className="btn btn-primary"
         >
           + New Ticket
         </button>
@@ -161,11 +161,10 @@ const UserSupportTickets = () => {
 
       {isLoading ? (
         <p className="flex justify-center items-center min-h-screen">
-           <PuffLoader />
-         </p>
-
+          <PuffLoader />
+        </p>
       ) : tickets.length === 0 ? (
-        <p className="text-gray-600">No tickets found.</p>
+        <p className="text-base-content/60">No tickets found.</p>
       ) : (
         <ul className="space-y-6">
           <AnimatePresence>
@@ -183,13 +182,13 @@ const UserSupportTickets = () => {
                   exit="exit"
                   layout
                   transition={{ duration: 0.3 }}
-                  className="backdrop-blur-lg bg-gradient-to-r from-indigo-500 to-purple-600 border-white/20 rounded-lg shadow-md p-4 text-white"
+                  className="bg-base-100 border border-base-300 rounded-lg shadow p-4 text-base-content"
                 >
                   <div className="flex justify-between items-start">
                     <div className="w-full">
                       <h3 className="text-lg font-semibold">{ticket.subject}</h3>
                       <p className="mt-1">{ticket.description}</p>
-                      <p className="text-sm text-white/80 mt-2">
+                      <p className="text-sm mt-2 opacity-70">
                         <span className="font-medium">Priority:</span> {ticket.priority} |{' '}
                         <span className="font-medium">Status:</span> {ticket.status} |{' '}
                         <span className="font-bold">Created At:</span>{' '}
@@ -201,10 +200,8 @@ const UserSupportTickets = () => {
                     <div className="flex gap-2 pl-4">
                       <button
                         onClick={() => canEdit && handleEdit(ticket)}
-                        className={`p-2 rounded-full transition ${
-                          canEdit
-                            ? 'text-yellow-300 hover:bg-white/30 hover:text-white'
-                            : 'text-gray-400 cursor-not-allowed'
+                        className={`btn btn-circle btn-ghost ${
+                          canEdit ? 'text-warning' : 'text-base-300 cursor-not-allowed'
                         }`}
                         disabled={!canEdit}
                         title={
@@ -217,10 +214,8 @@ const UserSupportTickets = () => {
                         onClick={() => {
                           if (canDelete) handleDelete(ticket.ticketId);
                         }}
-                        className={`p-2 rounded-full transition ${
-                          canDelete
-                            ? 'text-red-300 hover:bg-white/30 hover:text-white'
-                            : 'text-gray-400 cursor-not-allowed'
+                        className={`btn btn-circle btn-ghost ${
+                          canDelete ? 'text-error' : 'text-base-300 cursor-not-allowed'
                         }`}
                         disabled={!canDelete}
                         title={
@@ -253,11 +248,11 @@ const UserSupportTickets = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="bg-[#1f2937] text-white w-full max-w-xl p-6 rounded-xl shadow-xl relative border border-white/20"
+              className="bg-base-100 text-base-content w-full max-w-xl p-6 rounded-xl shadow-xl relative border border-base-300"
             >
               <button
                 onClick={resetForm}
-                className="absolute top-3 right-4 text-white hover:text-red-400 text-2xl font-bold"
+                className="absolute top-3 right-4 text-base-content hover:text-error text-2xl font-bold"
               >
                 &times;
               </button>
@@ -271,7 +266,7 @@ const UserSupportTickets = () => {
                   value={form.subject}
                   onChange={handleChange}
                   required
-                  className="w-full p-2 rounded bg-white/90 text-black mb-4 placeholder:text-gray-500"
+                  className="input input-bordered w-full mb-4"
                   placeholder="Enter subject"
                 />
 
@@ -282,7 +277,7 @@ const UserSupportTickets = () => {
                   onChange={handleChange}
                   rows={4}
                   required
-                  className="w-full p-2 rounded bg-white/90 text-black mb-4 placeholder:text-gray-500"
+                  className="textarea textarea-bordered w-full mb-4"
                   placeholder="Describe your issue..."
                 />
 
@@ -291,7 +286,7 @@ const UserSupportTickets = () => {
                   name="priority"
                   value={form.priority}
                   onChange={handleChange}
-                  className="w-full p-2 rounded bg-white/90 text-black mb-6"
+                  className="select select-bordered w-full mb-6"
                 >
                   <option>Low</option>
                   <option>Medium</option>
@@ -302,14 +297,14 @@ const UserSupportTickets = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+                    className="btn btn-primary"
                   >
                     {isEdit ? 'Update' : 'Submit'}
                   </button>
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
+                    className="btn btn-ghost"
                   >
                     Cancel
                   </button>
