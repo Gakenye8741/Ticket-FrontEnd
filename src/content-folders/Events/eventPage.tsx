@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft, Calendar, CheckCircle, Clock,
   DollarSign, MapPin, Tag, XCircle, ShoppingCart,
@@ -43,6 +43,7 @@ const formatKES = (amount: number) =>
 export const EventDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
   const { data: event, isLoading, error } = eventApi.useGetEventByIdQuery(id!);
@@ -68,6 +69,7 @@ export const EventDetailPage = () => {
   const handleBooking = async () => {
     if (!isAuthenticated) {
       toast.error("You must be logged in to book tickets.");
+      navigate("/login", { state: { from: location } });
       return;
     }
 
@@ -199,6 +201,19 @@ export const EventDetailPage = () => {
             <div className="flex-1 border border-base-300 rounded-xl p-6 space-y-4">
               <h2 className="text-2xl font-semibold mb-4">Book Your Ticket</h2>
 
+              {!isAuthenticated && (
+                <div className="text-warning text-sm bg-warning/10 p-3 rounded-lg border border-warning mb-2">
+                  Please{" "}
+                  <span
+                    className="underline cursor-pointer"
+                    onClick={() => navigate("/login", { state: { from: location } })}
+                  >
+                    log in
+                  </span>{" "}
+                  to book tickets.
+                </div>
+              )}
+
               <input
                 type="text"
                 value={user?.nationalId || ""}
@@ -244,12 +259,24 @@ export const EventDetailPage = () => {
               )}
 
               <button
-                onClick={handleBooking}
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    navigate("/login", { state: { from: location } });
+                  } else {
+                    handleBooking();
+                  }
+                }}
                 className="btn btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50"
                 disabled={isBooking || !hasTicketTypes}
               >
                 <ShoppingCart size={18} />
-                {!hasTicketTypes ? "No ticket types available" : isBooking ? "Processing..." : "Book & Pay Now"}
+                {!isAuthenticated
+                  ? "Please Login to Book"
+                  : !hasTicketTypes
+                  ? "No ticket types available"
+                  : isBooking
+                  ? "Processing..."
+                  : "Book & Pay Now"}
               </button>
             </div>
           </div>

@@ -10,7 +10,7 @@ import {
   MapPin,
   Users,
   Tag,
-  Ticket,
+  
 } from "lucide-react";
 
 type Venue = {
@@ -123,7 +123,7 @@ const EventCardItem = ({
       <div className="card-body">
         <h3 className="card-title text-primary">{event.title}</h3>
         <p className="text-success font-bold text-lg">
-          ${isNaN(price) ? "0.00" : price.toFixed(2)}
+          Ksh{isNaN(price) ? "0.00" : price.toFixed(2)}
         </p>
         <p className="text-base-content/70 line-clamp-3">
           {event.description || "No description available."}
@@ -137,8 +137,8 @@ const EventCardItem = ({
             { Icon: MapPin, label: event.venue?.address || "N/A" },
             { Icon: Users, label: event.venue?.capacity ?? "N/A" },
             { Icon: Tag, label: event.category || "Uncategorized" },
-            { Icon: Ticket, label: `Sold: ${event.ticketsSold}` },
-            { Icon: Ticket, label: `Available: ${event.ticketsTotal - event.ticketsSold}` },
+            // { Icon: Ticket, label: `Sold: ${event.ticketsSold}` },
+            // { Icon: Ticket, label: `Available: ${event.ticketsTotal - event.ticketsSold}` },
           ].map(({ Icon, label }, i) => (
             <div key={i} className="flex items-center gap-2">
               <Icon className="w-4 h-4 text-primary" />
