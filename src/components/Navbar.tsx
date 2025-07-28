@@ -18,6 +18,7 @@ import {
 
 import './animate.css';
 import { ThemeToggle } from "./ThemeToggle";
+import { useGetUserByNationalIdQuery } from "../features/APIS/UserApi";
 
 export const Navbar = () => {
   const location = useLocation();
@@ -26,9 +27,12 @@ export const Navbar = () => {
 
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
-  const firstName =useSelector((state:RootState)=>state.auth.user?.firstName);
-  console.log(firstName);
+  const firstName = useSelector((state: RootState) => state.auth.user?.firstName);
+  const nationalId = useSelector((state: RootState) => state.auth.user?.nationalId);
   const role = useSelector((state: RootState) => state.auth.role);
+
+  const { data: userData } = useGetUserByNationalIdQuery(nationalId!, { skip: !nationalId });
+  const profileImageUrl = userData?.profileImageUrl;
 
   const isActive = (path: string) => location.pathname === path ? "text-primary font-bold" : "";
 
@@ -101,6 +105,11 @@ export const Navbar = () => {
               <div className="dropdown dropdown-end group">
                 <label tabIndex={0} className="flex items-center cursor-pointer">
                   <div className="btn btn-outline btn-primary capitalize flex items-center gap-2">
+                    <img
+                      src={profileImageUrl || '/default-avatar.png'}
+                      alt="Profile"
+                      className="w-6 h-6 rounded-full object-cover border"
+                    />
                     Hey {firstName}
                     <ChevronDown className="h-4 w-4 transition-transform duration-200 group-hover:rotate-180" />
                   </div>
