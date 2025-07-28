@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import PuffLoader from 'react-spinners/PuffLoader';
 
@@ -37,6 +37,11 @@ const TicketDisplay: React.FC = () => {
 
   const [sendTicketEmail, { isLoading: isEmailSending }] = emailApi.useSendTicketEmailMutation();
 
+  const [searchEvent, setSearchEvent] = useState('');
+  const [searchDate, setSearchDate] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const TICKETS_PER_PAGE = 6;
+
   const isLoading =
     isBookingsLoading || isUserLoading || isEventsLoading || isTicketTypesLoading;
 
@@ -57,11 +62,32 @@ const TicketDisplay: React.FC = () => {
     };
   });
 
+  const filteredBookings = enrichedBookings
+    ?.filter((booking) => {
+      const matchesEvent = booking.eventName
+        .toLowerCase()
+        .includes(searchEvent.toLowerCase());
+      const matchesDate = searchDate
+        ? new Date(booking.createdAt).toISOString().slice(0, 10) === searchDate
+        : true;
+      return matchesEvent && matchesDate;
+    })
+    .sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+  const totalPages = Math.ceil((filteredBookings?.length || 0) / TICKETS_PER_PAGE);
+
+  const paginatedBookings = filteredBookings?.slice(
+    (currentPage - 1) * TICKETS_PER_PAGE,
+    currentPage * TICKETS_PER_PAGE
+  );
+
   const handleSendEmail = async () => {
-    if (!enrichedBookings || !user) return;
+    if (!filteredBookings || !user) return;
 
     try {
-      await sendTicketEmail({ bookings: enrichedBookings, user }).unwrap();
+      await sendTicketEmail({ bookings: filteredBookings, user }).unwrap();
       alert('Ticket details sent to your email!');
     } catch (error) {
       console.error('Error sending email:', error);
@@ -69,7 +95,12 @@ const TicketDisplay: React.FC = () => {
     }
   };
 
-  // Loader UI
+  const clearFilters = () => {
+    setSearchDate('');
+    setSearchEvent('');
+    setCurrentPage(1);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-base-100">
@@ -78,7 +109,6 @@ const TicketDisplay: React.FC = () => {
     );
   }
 
-  // No bookings fallback
   if (!bookings || bookings.length === 0) {
     return (
       <div className="text-center text-base-content mt-10 text-lg">
@@ -87,27 +117,79 @@ const TicketDisplay: React.FC = () => {
     );
   }
 
-  // Final UI
- return (
-  <div className="p-6 space-y-8 max-w-7xl mx-auto mt-20 bg-base-100 text-base-content rounded-box shadow">
-    <div className="flex justify-end">
-      <button
-        onClick={handleSendEmail}
-        disabled={isEmailSending}
-        className={`btn btn-primary ${isEmailSending ? 'btn-disabled loading' : ''}`}
-      >
-        {isEmailSending ? 'Sending...' : 'Email My Tickets'}
-      </button>
-    </div>
+  return (
+    <div className="p-6 space-y-8 max-w-7xl mx-auto mt-20 bg-base-100 text-base-content rounded-box shadow">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 w-full">
+          <input
+            type="text"
+            placeholder="Search by Event Name"
+            value={searchEvent}
+            onChange={(e) => {
+              setSearchEvent(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="input input-bordered w-full sm:max-w-xs"
+          />
+          <input
+            type="date"
+            value={searchDate}
+            onChange={(e) => {
+              setSearchDate(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="input input-bordered w-full sm:max-w-xs"
+          />
+        </div>
+        <button onClick={clearFilters} className="btn btn-outline btn-sm mt-2 md:mt-0">
+          Clear Filters
+        </button>
+      </div>
 
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {enrichedBookings?.map((booking) => (
-        <TicketItem key={booking.bookingId} booking={booking} user={user!} />
-      ))}
-    </div>
-  </div>
-);
+      <div className="flex justify-end">
+        <button
+          onClick={handleSendEmail}
+          disabled={isEmailSending}
+          className={`btn btn-primary ${isEmailSending ? 'btn-disabled loading' : ''}`}
+        >
+          {isEmailSending ? 'Sending...' : 'Email My Tickets'}
+        </button>
+      </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {paginatedBookings?.length === 0 && (
+          <p className="col-span-full text-center text-base-content">
+            No tickets match your search.
+          </p>
+        )}
+        {paginatedBookings?.map((booking) => (
+          <TicketItem key={booking.bookingId} booking={booking} user={user!} />
+        ))}
+      </div>
+
+      <div className="flex justify-center mt-8 gap-2">
+        <button
+          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+          disabled={currentPage === 1}
+          className="btn btn-sm"
+        >
+          Prev
+        </button>
+
+        <span className="text-sm text-base-content mt-1">
+          Page {currentPage} of {totalPages}
+        </span>
+
+        <button
+          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className="btn btn-sm"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default TicketDisplay;
