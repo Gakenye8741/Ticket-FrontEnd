@@ -1,5 +1,5 @@
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../App/store";
 import { clearCredentials } from "../features/Auth/AuthSlice";
@@ -15,8 +15,9 @@ import {
   UserCheck,
   Phone,
 } from "lucide-react";
+import Typed from "typed.js";
 
-import './animate.css';
+import "./animate.css"; // <-- make sure font-updock is defined here
 import { ThemeToggle } from "./ThemeToggle";
 import { useGetUserByNationalIdQuery } from "../features/APIS/UserApi";
 
@@ -24,6 +25,7 @@ export const Navbar = () => {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const typedRef = useRef<HTMLSpanElement>(null);
 
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
@@ -48,6 +50,20 @@ export const Navbar = () => {
       document.body.style.overflow = "auto";
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    const typed = new Typed(typedRef.current, {
+      strings: ["TicketStream 🎫", "TicketStream 🎤", "Book. Enjoy. Repeat."],
+      typeSpeed: 100,
+      backSpeed: 30,
+      showCursor: false,
+      loop: true,
+    });
+
+    return () => {
+      typed.destroy();
+    };
+  }, []);
 
   const handleLogout = () => {
     dispatch(clearCredentials());
@@ -85,8 +101,8 @@ export const Navbar = () => {
                 )}
               </ul>
             </div>
-            <Link to="/" className="btn btn-ghost text-xl flex items-center gap-1">
-              TicketStream 🎫
+            <Link to="/" className="btn btn-ghost text-xl font-bold flex items-center gap-1">
+              <span ref={typedRef} className="tracking-wide text-primary font-updock text-3xl" />
             </Link>
           </div>
 

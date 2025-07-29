@@ -65,7 +65,7 @@ export const PopularEvents: React.FC = () => {
     <section className="py-20 px-6 bg-base-100 text-base-content transition-colors duration-300">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-4xl font-extrabold text-center text-primary mb-6">
-          Popular Events We’ve Worked With
+          Popular Events We’ve Hosted With
         </h2>
 
         <p className="text-base-content/70 text-center max-w-2xl mx-auto mb-12">
