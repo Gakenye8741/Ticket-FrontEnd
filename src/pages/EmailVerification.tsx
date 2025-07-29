@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-
-
 import toast from 'react-hot-toast';
 
 import { TextInput } from '../components/TextInput';
@@ -15,7 +13,7 @@ export const EmailVerification = () => {
   const [email, setEmail] = useState(prefilledEmail);
   const [confirmationCode, setConfirmationCode] = useState('');
 
-  const [emailVerification, { isLoading }] =userApi.useVerifyEmailMutation();
+  const [emailVerification, { isLoading }] = userApi.useVerifyEmailMutation();
 
   useEffect(() => {
     if (!prefilledEmail) {
@@ -37,9 +35,9 @@ export const EmailVerification = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="bg-white shadow-lg rounded-2xl p-8 max-w-md w-full border border-gray-200">
-        <h2 className="text-2xl font-semibold text-[#093FB4] text-center mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4 transition-colors duration-300">
+      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-8 max-w-md w-full border border-gray-200 dark:border-gray-700">
+        <h2 className="text-2xl font-semibold text-blue-700 dark:text-blue-400 text-center mb-6">
           Email Verification
         </h2>
 
@@ -69,7 +67,7 @@ export const EmailVerification = () => {
             className={`w-full py-3 px-4 rounded-md font-semibold text-white transition-all duration-200 ${
               isLoading
                 ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-[#093FB4] hover:bg-blue-700 hover:shadow-lg transform hover:-translate-y-0.5'
+                : 'bg-blue-700 hover:bg-blue-800 dark:bg-blue-500 dark:hover:bg-blue-600 hover:shadow-lg transform hover:-translate-y-0.5'
             }`}
             disabled={isLoading}
           >
