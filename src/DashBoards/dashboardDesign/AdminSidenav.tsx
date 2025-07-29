@@ -35,11 +35,11 @@ export const AdminSideNav = ({ onNavItemClick }: { onNavItemClick?: () => void }
 
   const handleLogout = () => {
     dispatch(clearCredentials());
-    onNavItemClick?.(); // Close drawer on mobile
+    onNavItemClick?.();
   };
 
   return (
-    <aside className="h-full w-full p-4 bg-base-200 text-base-content space-y-2 overflow-y-auto rounded-lg shadow-md border border-blue-500 mt-auto border-r-2 border-b-4">
+    <aside className="h-full w-full p-4 bg-base-200 text-base-content space-y-2 overflow-y-auto rounded-lg shadow-md border border-blue-500 mt-17 border-r-2 border-b-4">
       <h4 className="mt-1 mb-4 flex items-center justify-center text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-yellow-500">
         <span className="mr-2">🛠️</span>
         Admin Panel
@@ -55,7 +55,7 @@ export const AdminSideNav = ({ onNavItemClick }: { onNavItemClick?: () => void }
             aria-label="Logout"
           >
             {item.icon}
-            <span>{item.name}</span>
+            <span className="font-chewy">{item.name}</span>
           </button>
         ) : (
           <NavLink
@@ -64,13 +64,13 @@ export const AdminSideNav = ({ onNavItemClick }: { onNavItemClick?: () => void }
             onClick={onNavItemClick}
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-2 rounded-lg transition hover:bg-base-300 ${
-                isActive ? 'bg-base-300 font-semibold text-primary' : ''
+                isActive ? "bg-base-300 font-semibold text-primary" : ""
               }`
             }
             aria-label={`Go to ${item.name}`}
           >
             {item.icon}
-            <span>{item.name}</span>
+            <span className="font-chewy">{item.name}</span>
           </NavLink>
         )
       )}
