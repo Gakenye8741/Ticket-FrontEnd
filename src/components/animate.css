@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Updock&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Chewy&family=Updock&display=swap');
 @keyframes glow {
   0% {
     box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
@@ -21,4 +22,7 @@
 }
 .font-updock {
   font-family: 'Updock', cursive;
+}
+.font-chewy {
+  font-family: 'Chewy', cursive;
 }

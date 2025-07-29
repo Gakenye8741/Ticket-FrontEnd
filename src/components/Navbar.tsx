@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Typed from "typed.js";
 
-import "./animate.css"; // <-- make sure font-updock is defined here
+import "./animate.css"; // includes font-chewy class
 import { ThemeToggle } from "./ThemeToggle";
 import { useGetUserByNationalIdQuery } from "../features/APIS/UserApi";
 
@@ -53,10 +53,11 @@ export const Navbar = () => {
 
   useEffect(() => {
     const typed = new Typed(typedRef.current, {
-      strings: ["TicketStream 🎫", "TicketStream 🎤", "Book. Enjoy. Repeat."],
+      strings: ["TicketStream ", "TicketStream ", "Book. Enjoy. Repeat."],
       typeSpeed: 100,
       backSpeed: 30,
-      showCursor: false,
+      showCursor: true,
+      cursorChar: '🎤',
       loop: true,
     });
 
@@ -87,7 +88,7 @@ export const Navbar = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16" />
                 </svg>
               </button>
-              <ul className="menu menu-sm dropdown-content bg-base-100 rounded-box z-10 mt-3 w-52 p-2 shadow">
+              <ul className="menu menu-sm dropdown-content bg-base-100 rounded-box z-10 mt-3 w-52 p-2 shadow font-chewy text-lg">
                 <li><Link className={isActive("/")} to="/" onClick={() => setMenuOpen(false)}><Home className="inline mr-2 h-4 w-4" /> Home</Link></li>
                 <li><Link className={isActive("/about")} to="/about" onClick={() => setMenuOpen(false)}><Info className="inline mr-2 h-4 w-4" /> About</Link></li>
                 <li><Link className={isActive("/events")} to="/events" onClick={() => setMenuOpen(false)}><CalendarDays className="inline mr-2 h-4 w-4" /> Events</Link></li>
@@ -107,7 +108,7 @@ export const Navbar = () => {
           </div>
 
           <div className="navbar-center hidden lg:flex">
-            <ul className="menu menu-horizontal px-1">
+            <ul className="menu menu-horizontal px-1 font-chewy text-lg">
               <li><Link className={isActive("/")} to="/"><Home className="inline mr-2 h-4 w-4" /> Home</Link></li>
               <li><Link className={isActive("/about")} to="/about"><Info className="inline mr-2 h-4 w-4" /> About</Link></li>
               <li><Link className={isActive("/events")} to="/events"><CalendarDays className="inline mr-2 h-4 w-4" /> Events</Link></li>
@@ -150,7 +151,7 @@ export const Navbar = () => {
                 </ul>
               </div>
             ) : (
-              <div className="hidden lg:flex gap-2">
+              <div className="hidden lg:flex gap-2 font-chewy text-lg">
                 <Link to="/register" className={`btn btn-ghost ${isActive("/register")}`}><UserPlus className="inline mr-2 h-4 w-4" /> Register</Link>
                 <Link to="/login" className={`btn ${isActive("/login")}`}><LogIn className="inline mr-2 h-4 w-4" /> Login</Link>
               </div>
@@ -161,7 +162,7 @@ export const Navbar = () => {
 
       {/* Bottom navbar for small screens */}
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 backdrop-blur bg-base-100/40 shadow-md border-t animate-glow">
-        <ul className="flex justify-around items-center py-2">
+        <ul className="flex justify-around items-center py-2 font-chewy text-base">
           <li><Link to="/" className={`flex flex-col items-center ${isActive("/")}`}><Home className="h-5 w-5" /><span className="text-xs">Home</span></Link></li>
           <li><Link to="/about" className={`flex flex-col items-center ${isActive("/about")}`}><Info className="h-5 w-5" /><span className="text-xs">About</span></Link></li>
           <li><Link to="/events" className={`flex flex-col items-center ${isActive("/events")}`}><CalendarDays className="h-5 w-5" /><span className="text-xs">Events</span></Link></li>

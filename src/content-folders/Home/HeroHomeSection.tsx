@@ -1,11 +1,14 @@
 import '../../animations/TrueFocus.css';
-import TrueFocus from '../../animations/TextFocus';
+
 import { useSelector } from 'react-redux';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Puff } from 'react-loader-spinner';
+import Typed from 'typed.js';
 import type { RootState } from '../../App/store';
 import { eventApi } from '../../features/APIS/EventsApi';
+import TrueFocus from '../../animations/TextFocus';
+
 
 const backgroundImage =
   'https://images.unsplash.com/photo-1549924231-f129b911e442?auto=format&fit=crop&w=1920&q=80';
@@ -17,7 +20,8 @@ function App() {
   const greeting = (() => {
     const h = new Date().getHours();
     if (h < 12) return 'Good Morning';
-    if (h < 16) return 'Good Afternoon';
+    if (h < 15) return 'Good Afternoon';
+    if (h < 18) return 'Good Evening';
     return 'Hey';
   })();
 
@@ -55,8 +59,24 @@ function App() {
   }, [events, search]);
 
   const hasSearch = search.trim().length > 0;
-
   const getEventId = (e: any) => e.eventId ?? e.id ?? e._id;
+
+  // 👇 Typed.js setup for name
+  const typedNameRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (!typedNameRef.current) return;
+
+    const typed = new Typed(typedNameRef.current, {
+      strings: [firstName],
+      typeSpeed: 100,
+      backSpeed: 1000,
+      showCursor: true,
+      cursorChar: '👋',
+      loop: false,
+    });
+
+    return () => typed.destroy();
+  }, [firstName]);
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-base-100 text-base-content overflow-hidden">
@@ -79,7 +99,8 @@ function App() {
         <div className="mt-12 bg-base-200/80 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-base-300 max-w-6xl mx-auto flex flex-col md:flex-row gap-8 animate-fadeInUp">
           <div className="flex-1 text-left space-y-4">
             <h1 className="text-4xl md:text-5xl font-extrabold text-primary animate-fadeInUp">
-              {greeting}, {firstName}
+              {greeting},{' '}
+              <span ref={typedNameRef} className="text-secondary" />
             </h1>
             <p className="leading-relaxed animate-fadeInUp">
               Welcome to <span className="text-accent font-semibold">TicketStream 🎫</span> — your ultimate platform for effortless event and ticketing management.
