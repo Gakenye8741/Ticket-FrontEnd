@@ -31,6 +31,7 @@ import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/PasswordReset';
 import SalesReport from './DashBoards/adminDashboard/SalesReport';
 import AdminUserProfile from './DashBoards/adminDashboard/AdminUserProfile';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   const Router = createBrowserRouter([
@@ -92,7 +93,13 @@ function App() {
     },
   ]);
 
-  return <RouterProvider router={Router} />;
+  return(
+    <>
+      <Toaster position='top-right' reverseOrder={false}/>
+      <RouterProvider router={Router} />
+    </>
+    
+  ) 
 }
 
 export default App;
