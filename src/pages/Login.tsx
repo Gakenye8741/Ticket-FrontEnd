@@ -30,6 +30,15 @@ const Login = () => {
       navigate(res.role === 'admin' ? '/AdminDashboard/analytics' : '/');
     } catch (error: any) {
       const ErrorMessage = error?.data?.error?.error || error?.data?.error || error?.error || '❌ Something went wrong. Please try again.';
+
+      // Check if the error is related to email verification
+      if (ErrorMessage.toLowerCase().includes('verify your email')) {
+        toast.error('❌ Login failed: Please verify your email first', { id: loadingToastId });
+        // Redirect to email verification page
+        navigate('/email-verification', { state: { email: data.email } });
+        return;
+      }
+
       toast.error(`Failed to login: ${ErrorMessage}`, { id: loadingToastId });
     }
   };

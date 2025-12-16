@@ -53,7 +53,7 @@ export const Navbar = () => {
 
   useEffect(() => {
     const typed = new Typed(typedRef.current, {
-      strings: ["TicketStream ", "TicketStream ", "Book. Enjoy. Repeat."],
+      strings: ["TicketStream ", "Book. Enjoy.  ", "Repeat."],
       typeSpeed: 100,
       backSpeed: 30,
       showCursor: true,
