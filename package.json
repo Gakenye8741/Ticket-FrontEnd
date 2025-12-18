@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
     "@headlessui/react": "^2.2.4",
     "@react-pdf/renderer": "^4.3.0",
     "@reduxjs/toolkit": "^2.8.2",
@@ -52,7 +55,9 @@
     "swiper": "^11.2.10",
     "tailwindcss": "^4.1.11",
     "three": "^0.178.0",
-    "typed.js": "^2.1.0"
+    "typed.js": "^2.1.0",
+    "vite-plugin-pwa": "^1.2.0",
+    "workbox-window": "^7.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
