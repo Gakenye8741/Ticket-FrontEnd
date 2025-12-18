@@ -32,12 +32,18 @@ import { ResetPassword } from './pages/PasswordReset';
 import SalesReport from './DashBoards/adminDashboard/SalesReport';
 import AdminUserProfile from './DashBoards/adminDashboard/AdminUserProfile';
 import { Toaster } from 'react-hot-toast';
+import BackButtonHandler from './pages/BackButtonHandler';
 
 function App() {
   const Router = createBrowserRouter([
     {
       path: '/',
-      element: <RootLayout/>, // 👈 Apply TokenExpiryWatcher here
+      element: (
+        <>
+          <BackButtonHandler />
+          <RootLayout />
+        </>
+      ), // 👈 Apply TokenExpiryWatcher here
       children: [
         { path: '/', element: <Home /> },
         { path: '/about', element: <About /> },
