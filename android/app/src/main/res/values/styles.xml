@@ -9,6 +9,5 @@
     <style name="AppTheme.NoActionBarLaunch" parent="AppTheme">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:background">@drawable/splash</item>
-    </style>
+        <item name="android:background">@color/colorPrimary</item> </style>
 </resources>
