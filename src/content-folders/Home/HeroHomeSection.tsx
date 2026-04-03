@@ -1,5 +1,4 @@
 import '../../animations/TrueFocus.css';
-
 import { useSelector } from 'react-redux';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -8,14 +7,14 @@ import Typed from 'typed.js';
 import type { RootState } from '../../App/store';
 import { eventApi } from '../../features/APIS/EventsApi';
 import TrueFocus from '../../animations/TextFocus';
+import { Search, CalendarX, Sparkles, LayoutDashboard, Ticket as TicketIcon, ShoppingCart, ChevronRight } from 'lucide-react';
 
-
-const backgroundImage =
-  'https://images.unsplash.com/photo-1549924231-f129b911e442?auto=format&fit=crop&w=1920&q=80';
+const backgroundImage = 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1920&q=80';
 
 function App() {
   const user = useSelector((state: RootState) => state.auth.user);
-  const firstName = user?.firstName ?? 'Unknown User';
+  const firstName = user?.firstName ?? 'User';
+  const isAdmin = user?.role === 'admin' || user?.role === 'ADMIN';
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -30,8 +29,6 @@ function App() {
   const {
     data: events = [],
     isLoading,
-    isError,
-    error,
   } = eventApi.useGetAllEventsQuery(undefined);
 
   const getEventDate = (e: any): Date => {
@@ -43,146 +40,182 @@ function App() {
 
   const filteredEvents = useMemo(() => {
     const now = new Date();
-    return (
-      events
-        .filter((evt: any) => getEventDate(evt) >= now)
-        .filter((evt: any) =>
-          search.trim()
-            ? evt.title?.toLowerCase().includes(search.toLowerCase())
-            : true
-        )
-        .sort(
-          (a: any, b: any) => getEventDate(a).getTime() - getEventDate(b).getTime()
-        )
-        .slice(0, 5)
-    );
+    return events
+      .filter((evt: any) => getEventDate(evt) >= now)
+      .filter((evt: any) =>
+        search.trim()
+          ? evt.title?.toLowerCase().includes(search.toLowerCase())
+          : true
+      )
+      .sort((a: any, b: any) => getEventDate(a).getTime() - getEventDate(b).getTime())
+      .slice(0, 5);
   }, [events, search]);
 
-  const hasSearch = search.trim().length > 0;
   const getEventId = (e: any) => e.eventId ?? e.id ?? e._id;
 
-  // 👇 Typed.js setup for name
+  // Search Highlight Helper
+  const HighlightText = ({ text, highlight }: { text: string; highlight: string }) => {
+    if (!highlight.trim()) return <span>{text}</span>;
+    const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+    return (
+      <span>
+        {parts.map((part, i) =>
+          part.toLowerCase() === highlight.toLowerCase() ? (
+            <mark key={i} className="bg-primary/30 text-primary font-black rounded-sm px-0.5">{part}</mark>
+          ) : (
+            part
+          )
+        )}
+      </span>
+    );
+  };
+
   const typedNameRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     if (!typedNameRef.current) return;
-
     const typed = new Typed(typedNameRef.current, {
       strings: [firstName],
       typeSpeed: 100,
       backSpeed: 1000,
       showCursor: true,
-      cursorChar: '👋',
+      cursorChar: '📍',
       loop: false,
     });
-
     return () => typed.destroy();
   }, [firstName]);
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-base-100 text-base-content overflow-hidden">
-      <div
-        className="absolute inset-0 bg-cover bg-center opacity-10 dark:opacity-20"
+    <div className="relative min-h-screen flex flex-col items-center justify-start bg-base-100 text-base-content overflow-x-hidden font-sans">
+      
+      {/* --- Background Stack --- */}
+      <div className="fixed inset-0 bg-cover bg-center transition-all duration-1000 z-0 scale-105 opacity-80"
         style={{ backgroundImage: `url(${backgroundImage})` }}
       />
-      <div className="absolute inset-0 bg-base-100/60 backdrop-blur z-10" />
+      <div className="fixed inset-0 bg-black/40 mix-blend-multiply z-1" />
+      <div className="fixed inset-0 bg-gradient-to-b from-base-100/20 via-base-100/80 to-base-100 z-10" />
 
-      <div className="relative z-20 text-center px-6 animate-fadeIn">
-        <TrueFocus
-          sentence="TicketStream 🎫 Events And Ticketing Management System"
-          manualMode={false}
-          blurAmount={2}
-          borderColor="cyan"
-          animationDuration={2}
-          pauseBetweenAnimations={2}
-        />
+      <div className="relative z-20 w-full max-w-7xl px-4 sm:px-6 pt-12 pb-24 flex flex-col items-center">
+        
+        {/* Branding Section */}
+        <div className="mb-12 w-full flex justify-center transform hover:scale-105 transition-transform duration-500">
+          <TrueFocus
+            sentence={isAdmin ? "TicketStream 🎫 Admin Command Center" : "TicketStream 🎫 Campus Life & Event Gateway"}
+            manualMode={false}
+            blurAmount={3}
+            borderColor="hsl(var(--p))" // Using the exact Primary CSS variable
+            animationDuration={2}
+            pauseBetweenAnimations={2}
+          />
+        </div>
 
-        <div className="mt-12 bg-base-200/80 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-base-300 max-w-6xl mx-auto flex flex-col md:flex-row gap-8 animate-fadeInUp">
-          <div className="flex-1 text-left space-y-4">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-primary animate-fadeInUp">
-              {greeting},{' '}
-              <span ref={typedNameRef} className="text-secondary" />
-            </h1>
-            <p className="leading-relaxed animate-fadeInUp">
-              Welcome to <span className="text-accent font-semibold">TicketStream 🎫</span> — your ultimate platform for effortless event and ticketing management.
-              <br />
-              <br />
-              Whether it’s a festival or a meetup, our tools help you sell tickets and promote your events like a pro.
-            </p>
-            <Link
-              to="/events"
-              className="btn btn-primary font-bold py-2 px-6 rounded-xl shadow transition animate-fadeInUp"
-            >
-              Get Started
-            </Link>
-          </div>
+        {/* --- Main Dashboard --- */}
+        <div className="w-full bg-base-200/30 backdrop-blur-[60px] rounded-[2.5rem] sm:rounded-[4rem] p-[2px] shadow-[0_30px_100px_-20px_rgba(0,0,0,0.5)] border border-primary/20 shadow-primary/10">
+          <div className="bg-base-200/80 rounded-[2.4rem] sm:rounded-[3.9rem] p-6 sm:p-12 md:p-16 flex flex-col lg:flex-row gap-12 lg:gap-16 items-center">
+            
+            {/* Left: Identity & Greeting */}
+            <div className="w-full flex-1 text-left space-y-8">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border backdrop-blur-md bg-primary/10 text-primary border-primary/20">
+                  <Sparkles size={12} className="animate-pulse" />
+                  {isAdmin ? 'System Administrator' : 'Verified Campus User'}
+                </div>
+                <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter leading-[0.85] italic">
+                  {greeting},<br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary drop-shadow-sm">
 
-          <div className="flex-1 space-y-4">
-            <input
-              type="text"
-              placeholder="Search events by title..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="input input-bordered w-full text-base-content animate-fadeInUp"
-            />
-
-            {isLoading && (
-              <div className="flex justify-center items-center py-10 animate-fadeIn">
-                <Puff
-                  height={60}
-                  width={60}
-                  radius={1}
-                  color="#06b6d4"
-                  ariaLabel="loading-events"
-                  visible={true}
-                />
+                  </span>
+                  <span ref={typedNameRef} className="text-primary ml-1" />
+                </h1>
               </div>
-            )}
 
-            {isError && (
-              <p className="text-error animate-fadeIn">
-                {(error as { status?: string })?.status || 'Failed to load events'}
+              <p className="text-lg md:text-xl leading-relaxed text-base-content/70 max-w-md font-medium border-l-4 border-primary/50 pl-6 italic">
+                {isAdmin 
+                  ? "System integrity confirmed. Manage live listings and monitor campus engagement metrics below."
+                  : "Find your next core memory. Browse the latest festivals and campus gatherings."}
               </p>
-            )}
 
-            {!isLoading && hasSearch && filteredEvents.length > 0 && (
-              <>
-                <p className="text-success mb-2 animate-fadeInUp">
-                  Showing {filteredEvents.length} matching upcoming event{filteredEvents.length > 1 ? 's' : ''} for “{search}”.
-                </p>
-                <Link
-                  to="/events"
-                  className="btn btn-accent mb-4 animate-fadeInUp"
-                >
-                  View All Events
+              <div className="flex flex-wrap gap-4 pt-4">
+                <Link to={isAdmin ? "/admin/events" : "/events"}
+                  className="btn btn-primary btn-lg px-12 rounded-2xl font-black shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all group border-none h-16 uppercase tracking-[0.3em] text-[10px]">
+                  {isAdmin ? 'Explore Events' : 'Explore Feed'}
+                  <Search size={18} className="ml-2 group-hover:rotate-12 transition-transform" />
                 </Link>
-              </>
-            )}
+                
+                <Link to={isAdmin ? "/admin/dashboard" : "/dashboard/MyTickets"} 
+                  className="btn btn-ghost btn-lg bg-base-100/20 hover:bg-base-100/40 border-base-300 rounded-2xl font-bold px-10 transition-all backdrop-blur-sm h-16 uppercase tracking-[0.3em] text-[10px]">
+                  {isAdmin ? <LayoutDashboard size={18} className="mr-2"/> : <TicketIcon size={18} className="mr-2"/>}
+                  {isAdmin ? 'Admin Panel' : 'My Passes'}
+                </Link>
+              </div>
+            </div>
 
-            {!isLoading && hasSearch && filteredEvents.length === 0 && (
-              <p className="text-error animate-fadeInUp">No matching upcoming events found.</p>
-            )}
+            {/* Right: Search & Event Feed */}
+            <div className="w-full flex-1 space-y-8">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-[2rem] blur opacity-20 group-focus-within:opacity-100 transition duration-1000"></div>
+                <div className="relative">
+                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-base-content/40" size={24} />
+                  <input
+                    type="text"
+                    placeholder={isAdmin ? "Query event records..." : "Search festivals, tech, arts..."}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="input h-16 sm:h-20 w-full bg-base-100/40 rounded-[1.5rem] sm:rounded-[2rem] border-2 border-white/5 focus:border-primary transition-all text-lg sm:text-xl font-bold pl-16 pr-8 backdrop-blur-xl"
+                  />
+                </div>
+              </div>
 
-            {!isLoading && filteredEvents.length > 0 && (
-              <ul className="space-y-2 max-h-60 overflow-y-auto pr-2 animate-fadeInUp">
-                {filteredEvents.map((evt: any, idx: number) => (
-                  <li
-                    key={getEventId(evt)}
-                    className="bg-base-300/50 px-4 py-2 rounded hover:bg-base-300 transition"
-                    style={{ animationDelay: `${idx * 100}ms` }}
-                  >
-                    <Link
-                      to={`/events/${getEventId(evt)}`}
-                      className="flex justify-between items-center group transition duration-300"
-                    >
-                      <span>{evt.title}</span>
-                      <span className="text-xl text-primary transform transition-transform duration-300 group-hover:translate-x-2 group-hover:scale-110">
-                        →
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
+              {/* Feed Container */}
+              <div className="bg-black/10 dark:bg-white/5 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-8 border border-white/10 min-h-[400px] shadow-inner flex flex-col">
+                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] mb-8 flex items-center gap-3 text-primary/80">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-primary"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                  </span>
+                  {isAdmin ? 'Real-Time Database' : 'Live Campus Pulse'}
+                </h2>
+
+                <div className="flex-grow">
+                  {isLoading ? (
+                    <div className="flex flex-col justify-center items-center h-64">
+                      <Puff height={60} width={60} color="hsl(var(--p))" />
+                      <p className="mt-4 text-[10px] font-black uppercase tracking-widest opacity-40">Connecting to Stream...</p>
+                    </div>
+                  ) : filteredEvents.length > 0 ? (
+                    <ul className="space-y-4">
+                      {filteredEvents.map((evt: any, idx: number) => (
+                        <li key={getEventId(evt)} className="group animate-fadeInUp" style={{ animationDelay: `${idx * 100}ms` }}>
+                          <Link
+                            to={isAdmin ? `/admin/events/${getEventId(evt)}` : `/events/${getEventId(evt)}`}
+                            className="flex justify-between items-center p-5 sm:p-7 bg-base-100/40 hover:bg-base-100/90 rounded-[1.5rem] sm:rounded-[2rem] transition-all border border-transparent hover:border-primary/30 group-hover:translate-x-2"
+                          >
+                            <div className="flex flex-col gap-1">
+                              <span className="font-black text-lg sm:text-2xl group-hover:text-primary transition-colors tracking-tighter leading-tight">
+                                <HighlightText text={evt.title} highlight={search} />
+                              </span>
+                              <span className="text-[9px] uppercase font-black text-base-content/40 tracking-widest">
+                                {isAdmin ? `UID: ${getEventId(evt).toString().slice(0,10)}` : 'Entry Confirmed'}
+                              </span>
+                            </div>
+                            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center transition-all bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white">
+                                <ChevronRight size={20} />
+                            </div>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-64 opacity-40 text-center px-4">
+                      <CalendarX size={48} className="mb-4" />
+                      <p className="text-xl font-black uppercase tracking-tighter italic">
+                        {search ? `No results for "${search}"` : "The stage is quiet..."}
+                      </p>
+                      <p className="text-xs font-bold opacity-60">Check back later for new event drops.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

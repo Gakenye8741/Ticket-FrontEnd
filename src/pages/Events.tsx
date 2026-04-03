@@ -6,9 +6,7 @@ import { Navbar } from "../components/Navbar";
 import { EventDetailsPage } from "../content-folders/Events/EventsDetails";
 
 export const Events = () => {
-  useEffect(() => {
-    toast.success("Welcome to the Events Page 🎟️");
-  }, []);
+
 
   return (
     <div>

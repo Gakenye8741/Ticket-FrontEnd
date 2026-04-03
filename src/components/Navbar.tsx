@@ -12,18 +12,18 @@ import {
   LogOut,
   User,
   ChevronDown,
-  UserCheck,
+  LayoutDashboard,
   Phone,
+  Sparkles,
 } from "lucide-react";
 import Typed from "typed.js";
 
-import "./animate.css"; // includes font-chewy class
+import "./animate.css"; 
 import { ThemeToggle } from "./ThemeToggle";
 import { useGetUserByNationalIdQuery } from "../features/APIS/UserApi";
 
 export const Navbar = () => {
   const location = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const typedRef = useRef<HTMLSpanElement>(null);
 
@@ -36,7 +36,11 @@ export const Navbar = () => {
   const { data: userData } = useGetUserByNationalIdQuery(nationalId!, { skip: !nationalId });
   const profileImageUrl = userData?.profileImageUrl;
 
-  const isActive = (path: string) => location.pathname === path ? "text-primary font-bold" : "";
+  // Active link logic with glass pill background
+  const getNavLinkClass = (path: string) => 
+    location.pathname === path 
+      ? "bg-primary/20 text-primary shadow-[0_0_15px_rgba(var(--p),0.2)]" 
+      : "text-base-content/60 hover:text-primary transition-all";
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -45,129 +49,138 @@ export const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : "auto";
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [menuOpen]);
-
-  useEffect(() => {
     const typed = new Typed(typedRef.current, {
-      strings: ["TicketStream ", "Book. Enjoy.  ", "Repeat."],
-      typeSpeed: 100,
-      backSpeed: 30,
-      showCursor: true,
-      cursorChar: '🎤',
+      strings: ["TicketStream", "Book Now.", "Enjoy."],
+      typeSpeed: 80,
+      backSpeed: 50,
       loop: true,
+      showCursor: false,
     });
-
-    return () => {
-      typed.destroy();
-    };
+    return () => typed.destroy();
   }, []);
 
   const handleLogout = () => {
     dispatch(clearCredentials());
-    setMenuOpen(false);
   };
 
   return (
     <>
-      <div className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 border-b border-base-300 ${
-        scrolled ? "backdrop-blur bg-base-100/70 shadow-md" : "bg-base-100"
+      {/* --- TOP NAVBAR (Branding & User) --- */}
+      <nav className={`fixed top-0 left-0 w-full z-[60] transition-all duration-500 ${
+        scrolled 
+          ? "py-2 bg-base-100/40 backdrop-blur-2xl border-b border-white/10 shadow-xl" 
+          : "py-4 bg-transparent"
       }`}>
-        <div className="navbar">
-          <div className="navbar-start">
-            <div className="dropdown">
-              <button
-                className="btn btn-ghost lg:hidden"
-                onClick={() => setMenuOpen(!menuOpen)}
-                aria-label="Toggle menu"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16" />
-                </svg>
-              </button>
-              <ul className="menu menu-sm dropdown-content bg-base-100 rounded-box z-10 mt-3 w-52 p-2 shadow font-chewy text-lg">
-                <li><Link className={isActive("/")} to="/" onClick={() => setMenuOpen(false)}><Home className="inline mr-2 h-4 w-4" /> Home</Link></li>
-                <li><Link className={isActive("/about")} to="/about" onClick={() => setMenuOpen(false)}><Info className="inline mr-2 h-4 w-4" /> About</Link></li>
-                <li><Link className={isActive("/events")} to="/events" onClick={() => setMenuOpen(false)}><CalendarDays className="inline mr-2 h-4 w-4" /> Events</Link></li>
-                <li><Link className={isActive("/contact")} to="/contact" onClick={() => setMenuOpen(false)}><Phone className="inline mr-2 h-4 w-4" /> Contact</Link></li>
-                <li><ThemeToggle /></li>
-                {!isAuthenticated && (
-                  <>
-                    <li><Link className={isActive("/register")} to="/register" onClick={() => setMenuOpen(false)}><UserPlus className="inline mr-2 h-4 w-4" /> Register</Link></li>
-                    <li><Link className={isActive("/login")} to="/login" onClick={() => setMenuOpen(false)}><LogIn className="inline mr-2 h-4 w-4" /> Login</Link></li>
-                  </>
-                )}
-              </ul>
+        <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
+          
+          {/* Logo Section */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:rotate-12 transition-transform">
+              <Sparkles className="text-white w-6 h-6" />
             </div>
-            <Link to="/" className="btn btn-ghost text-xl font-bold flex items-center gap-1">
-              <span ref={typedRef} className="tracking-wide text-primary font-updock text-3xl" />
-            </Link>
+            <span ref={typedRef} className="text-2xl font-black italic uppercase tracking-tighter text-base-content" />
+          </Link>
+
+          {/* Desktop Links (Hidden on Mobile) */}
+          <div className="hidden lg:flex items-center gap-1 bg-white/5 backdrop-blur-md p-1.5 rounded-2xl border border-white/10">
+            {[
+              { path: "/", label: "Home", icon: Home },
+              { path: "/about", label: "About", icon: Info },
+              { path: "/events", label: "Events", icon: CalendarDays },
+              { path: "/contact", label: "Contact", icon: Phone },
+            ].map((link) => (
+              <Link 
+                key={link.path}
+                to={link.path} 
+                className={`px-5 py-2 rounded-xl flex items-center gap-2 text-sm font-black uppercase tracking-widest italic transition-all ${getNavLinkClass(link.path)}`}
+              >
+                <link.icon size={16} />
+                {link.label}
+              </Link>
+            ))}
           </div>
 
-          <div className="navbar-center hidden lg:flex">
-            <ul className="menu menu-horizontal px-1 font-chewy text-lg">
-              <li><Link className={isActive("/")} to="/"><Home className="inline mr-2 h-4 w-4" /> Home</Link></li>
-              <li><Link className={isActive("/about")} to="/about"><Info className="inline mr-2 h-4 w-4" /> About</Link></li>
-              <li><Link className={isActive("/events")} to="/events"><CalendarDays className="inline mr-2 h-4 w-4" /> Events</Link></li>
-              <li><Link className={isActive("/contact")} to="/contact"><Phone className="inline mr-2 h-4 w-4" /> Contact</Link></li>
-            </ul>
-          </div>
-
-          <div className="navbar-end flex gap-2 items-center">
+          {/* User Profile & Theme Toggle */}
+          <div className="flex items-center gap-3">
             <ThemeToggle />
+            
             {isAuthenticated ? (
               <div className="dropdown dropdown-end group">
-                <label tabIndex={0} className="flex items-center cursor-pointer">
-                  <div className="btn btn-outline btn-primary capitalize flex items-center gap-2">
-                    <img
-                      src={profileImageUrl || '/default-avatar.png'}
-                      alt="Profile"
-                      className="w-6 h-6 rounded-full object-cover border"
-                    />
-                    Hey {firstName}
-                    <ChevronDown className="h-4 w-4 transition-transform duration-200 group-hover:rotate-180" />
+                <label tabIndex={0} className="relative cursor-pointer block">
+                  {/* Visual Dropdown Indicator: Added Chevron + Border scale */}
+                  <div className="flex items-center gap-2 bg-base-100/50 backdrop-blur-md border border-white/10 p-1 pr-3 rounded-2xl hover:border-primary/50 transition-all">
+                    <div className="w-8 h-8 rounded-xl overflow-hidden shadow-inner">
+                      <img
+                        src={profileImageUrl || '/default-avatar.png'}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest opacity-70">
+                      {firstName}
+                    </span>
+                    <ChevronDown size={14} className="opacity-40 group-hover:rotate-180 group-hover:text-primary transition-all duration-300" />
                   </div>
                 </label>
-                <ul tabIndex={0} className="menu dropdown-content bg-base-100 shadow rounded-box w-52 mt-2 z-20">
+                <ul tabIndex={0} className="menu dropdown-content mt-4 p-2 shadow-2xl bg-base-100/90 backdrop-blur-xl rounded-2xl w-60 border border-white/10 z-[70] animate-in fade-in slide-in-from-top-2">
+                  <li className="menu-title text-[9px] uppercase tracking-[0.4em] opacity-40 px-4 py-2">Account Management</li>
                   <li>
-                    {role === "admin" ? (
-                      <Link to="/AdminDashBoard/analytics" className="font-bold flex items-center gap-2">
-                        <UserCheck className="h-5 w-5" /> Admin Dashboard
-                      </Link>
-                    ) : (
-                      <Link to="/dashboard" className="font-bold flex items-center gap-2">
-                        <User className="h-5 w-5" /> User Dashboard
-                      </Link>
-                    )}
+                    <Link to={role === "admin" ? "/AdminDashBoard/analytics" : "/dashboard"} className="flex items-center gap-3 p-3 rounded-xl hover:bg-primary/10 transition-colors">
+                      <LayoutDashboard size={18} className="text-primary" /> 
+                      <span className="font-bold uppercase italic text-[11px] tracking-widest">Dashboard</span>
+                    </Link>
                   </li>
+                  <div className="h-[1px] bg-white/5 my-1" />
                   <li>
-                    <button onClick={handleLogout} className="flex items-center gap-2">
-                      <LogOut className="h-5 w-5" /> Logout
+                    <button onClick={handleLogout} className="flex items-center gap-3 p-3 rounded-xl hover:bg-error/10 text-error transition-colors">
+                      <LogOut size={18} /> 
+                      <span className="font-bold uppercase italic text-[11px] tracking-widest">Sign Out</span>
                     </button>
                   </li>
                 </ul>
               </div>
             ) : (
-              <div className="hidden lg:flex gap-2 font-chewy text-lg">
-                <Link to="/register" className={`btn btn-ghost ${isActive("/register")}`}><UserPlus className="inline mr-2 h-4 w-4" /> Register</Link>
-                <Link to="/login" className={`btn ${isActive("/login")}`}><LogIn className="inline mr-2 h-4 w-4" /> Login</Link>
+              <div className="flex items-center gap-2">
+                <Link to="/login" className="btn btn-primary btn-sm rounded-xl px-6 font-black uppercase italic tracking-widest border-none shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
+                  Login
+                </Link>
               </div>
             )}
           </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Bottom navbar for small screens */}
-      <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 backdrop-blur bg-base-100/40 shadow-md border-t animate-glow">
-        <ul className="flex justify-around items-center py-2 font-chewy text-base">
-          <li><Link to="/" className={`flex flex-col items-center ${isActive("/")}`}><Home className="h-5 w-5" /><span className="text-xs">Home</span></Link></li>
-          <li><Link to="/about" className={`flex flex-col items-center ${isActive("/about")}`}><Info className="h-5 w-5" /><span className="text-xs">About</span></Link></li>
-          <li><Link to="/events" className={`flex flex-col items-center ${isActive("/events")}`}><CalendarDays className="h-5 w-5" /><span className="text-xs">Events</span></Link></li>
-          <li><Link to="/contact" className={`flex flex-col items-center ${isActive("/contact")}`}><Phone className="h-5 w-5" /><span className="text-xs">Contact</span></Link></li>
-        </ul>
+      {/* --- MOBILE FLOATING DOCK (Fixed Bottom) --- */}
+      <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] max-w-[420px] z-[60]">
+        <div className="bg-base-100/60 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] p-2">
+          <ul className="flex justify-around items-center">
+            {[
+              { path: "/", icon: Home, label: "Home" },
+              { path: "/about", icon: Info, label: "About" },
+              { path: "/events", icon: CalendarDays, label: "Events" },
+              { path: "/contact", icon: Phone, label: "Contact" },
+              { path: "/login", icon: UserPlus, label: "Auth", hide: isAuthenticated }
+            ].map((item) => (
+              !item.hide && (
+                <li key={item.path} className="flex-1">
+                  <Link 
+                    to={item.path} 
+                    className={`flex flex-col items-center justify-center py-2 transition-all duration-300 rounded-2xl ${
+                      location.pathname === item.path 
+                        ? "text-primary scale-110" 
+                        : "text-base-content/40"
+                    }`}
+                  >
+                    <div className={`p-2 rounded-xl transition-all duration-500 ${location.pathname === item.path ? "bg-primary text-white shadow-lg shadow-primary/40 rotate-[360deg]" : ""}`}>
+                       <item.icon size={20} />
+                    </div>
+                    <span className="text-[8px] font-black uppercase tracking-tighter mt-1">{item.label}</span>
+                  </Link>
+                </li>
+              )
+            ))}
+          </ul>
+        </div>
       </div>
     </>
   );

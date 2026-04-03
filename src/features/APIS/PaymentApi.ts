@@ -36,9 +36,15 @@ export const paymentApi = createApi({
       providesTags: ['payments'],
     }),
 
-    // 📥 Get payments by national ID ✅ NEW
+    // 📥 Get payments by national ID
     getPaymentsByNationalId: builder.query({
       query: (nationalId: number) => `payments/national-id/${nationalId}`,
+      providesTags: ['payments'],
+    }),
+
+    // 📥 Get payments by Event ID ✅ NEW
+    getPaymentsByEventId: builder.query({
+      query: (eventId: number) => `payments/event/${eventId}`,
       providesTags: ['payments'],
     }),
 
@@ -66,7 +72,7 @@ export const paymentApi = createApi({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: ['payments'],
+      invalidatesTags: ['payments', 'payment'],
     }),
 
     // 🗑️ Delete a payment
@@ -88,3 +94,17 @@ export const paymentApi = createApi({
     }),
   }),
 });
+
+// Export hooks for usage in functional components
+export const {
+  useGetAllPaymentsQuery,
+  useGetPaymentByIdQuery,
+  useGetPaymentsByBookingIdQuery,
+  useGetPaymentsByNationalIdQuery,
+  useGetPaymentsByEventIdQuery,
+  useGetPaymentsByStatusQuery,
+  useCreatePaymentMutation,
+  useUpdatePaymentMutation,
+  useDeletePaymentMutation,
+  useCreateCheckoutSessionMutation,
+} = paymentApi;

@@ -1,107 +1,166 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { 
+  Sparkles, 
+  Target, 
+  Zap, 
+  Users, 
+  Trophy, 
+  ArrowRight,
+  ShieldCheck,
+  BellRing,
+  BarChart3,
+  Globe,
+  Ticket
+} from "lucide-react";
 
 export const AboutEvent: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="min-h-screen py-20 px-6 bg-base-200 text-base-content">
-      <div className="max-w-6xl mx-auto">
-        {/* Hero */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-primary mb-4">
-            About TicketStream 🎫
+    <section className="relative min-h-screen bg-transparent overflow-hidden mt-20">
+      
+      {/* --- HERO SPLIT SECTION --- */}
+      <div className="flex flex-col lg:flex-row min-h-[90vh] w-full">
+        
+        {/* LEFT SIDE: THE IMAGE (Half Screen) */}
+        <div className="relative w-full lg:w-1/2 h-[50vh] lg:h-auto p-6 lg:p-12">
+          <div className="relative h-full w-full rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl">
+            <img 
+              src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=1200&q=80" 
+              alt="Event Crowd" 
+              className="w-full h-full object-cover transition-transform duration-[2000ms] hover:scale-110"
+            />
+            {/* Glass Overlay on Image */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            <div className="absolute bottom-10 left-10 right-10 backdrop-blur-xl bg-white/5 p-6 rounded-3xl border border-white/10">
+               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary mb-2">Live Energy</p>
+               <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white">Capturing the Unseen.</h2>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT SIDE: THE STORY (Half Screen) */}
+        <div className="w-full lg:w-1/2 flex flex-col justify-center p-8 lg:p-20">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-primary text-[10px] font-black uppercase tracking-[0.4em] mb-8 w-fit">
+            <Sparkles className="w-3 h-3" />
+            The Future of Access
+          </div>
+          
+          <h1 className="text-5xl sm:text-7xl font-black italic uppercase tracking-tighter text-base-content mb-8 leading-[0.9]">
+            The Core of <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary animate-pulse">
+              TicketStream
+            </span>
           </h1>
-          <p className="text-lg max-w-3xl mx-auto text-base-content/70">
-            At <span className="text-primary font-semibold">TicketStream</span>, we connect people with unforgettable experiences—empowering organizers and guiding attendees to the best events and venues across Kenya and beyond.
-          </p>
-        </div>
-
-        {/* Core Sections */}
-        <div className="grid gap-12 md:grid-cols-2">
-          {/* Mission */}
-          <div className="card bg-base-100 shadow-md border border-base-300">
-            <div className="card-body">
-              <h2 className="card-title text-primary">Our Mission</h2>
-              <p>
-                To revolutionize the way events are discovered, attended, and enjoyed in East Africa—creating seamless experiences from ticketing to the final applause.
-              </p>
-            </div>
-          </div>
-
-          {/* What We Offer */}
-          <div className="card bg-base-100 shadow-md border border-base-300">
-            <div className="card-body">
-              <h2 className="card-title text-primary">What We Offer</h2>
-              <ul className="list-disc list-inside space-y-2 text-base-content/80">
-                <li>Discover trending concerts, festivals, expos & shows</li>
-                <li>Access real-time event updates and notifications</li>
-                <li>Easy and secure ticket purchases</li>
-                <li>Tools for event organizers to manage and grow their audience</li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Partners */}
-          <div className="card bg-base-100 shadow-md border border-base-300">
-            <div className="card-body">
-              <h2 className="card-title text-primary">Who We Work With</h2>
-              <p>
-                We proudly support local promoters, music festivals, corporate events, university shows, and charity galas. If it brings people together, we’re there to help it shine.
-              </p>
-            </div>
-          </div>
-
-          {/* Vision */}
-          <div className="card bg-base-100 shadow-md border border-base-300">
-            <div className="card-body">
-              <h2 className="card-title text-primary">Our Vision</h2>
-              <p>
-                To be East Africa’s leading hub for discovering and managing live events—bridging people, culture, and creativity through powerful digital experiences.
-              </p>
+          
+          <div className="space-y-8 max-w-xl">
+            <p className="text-lg text-base-content/60 font-medium italic leading-relaxed border-l-4 border-primary/30 pl-6">
+              We connect people with unforgettable experiences—empowering organizers and guiding attendees to the best events and venues across <span className="text-primary">Kenya and beyond.</span>
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+               <div className="p-6 rounded-[2rem] bg-white/5 border border-white/5 backdrop-blur-xl">
+                  <Target className="w-6 h-6 text-primary mb-3" />
+                  <h4 className="font-black uppercase italic text-xs tracking-widest mb-2">Mission</h4>
+                  <p className="text-[11px] text-base-content/40 font-bold uppercase italic">Revolutionizing event discovery through digital harmony.</p>
+               </div>
+               <div className="p-6 rounded-[2rem] bg-white/5 border border-white/5 backdrop-blur-xl">
+                  <Trophy className="w-6 h-6 text-secondary mb-3" />
+                  <h4 className="font-black uppercase italic text-xs tracking-widest mb-2">Vision</h4>
+                  <p className="text-[11px] text-base-content/40 font-bold uppercase italic">Being the definitive cultural hub for the digital age.</p>
+               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Why Choose Us */}
-        <div className="mt-24 card bg-base-100 shadow-lg border border-base-300">
-          <div className="card-body">
-            <h2 className="text-3xl font-bold text-primary text-center mb-6">
-              Why Choose TicketStream?
-            </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 text-base-content/80">
-              <div>
-                <h4 className="font-semibold text-primary mb-2">Effortless Ticketing</h4>
-                <p>Purchase and scan tickets easily with QR technology—no stress or printouts.</p>
-              </div>
-              <div>
-                <h4 className="font-semibold text-primary mb-2">Real-Time Event Updates</h4>
-                <p>Stay informed with alerts, changes, and last-minute deals via mobile & web.</p>
-              </div>
-              <div>
-                <h4 className="font-semibold text-primary mb-2">Data-Driven Tools</h4>
-                <p>Organizers get insights, analytics, and management tools to scale events efficiently.</p>
-              </div>
-            </div>
+      {/* --- BOTTOM CONTENT (SCROLLABLE) --- */}
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24 space-y-32">
+        
+        {/* Core Pillars Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <GlassCard 
+            icon={<Zap className="w-6 h-6" />} 
+            title="What We Offer" 
+            color="secondary"
+            desc="Curated discovery, real-time updates, and an encrypted digital ticket ecosystem."
+          />
+          <GlassCard 
+            icon={<Users className="w-6 h-6" />} 
+            title="Partners" 
+            color="primary"
+            desc="Powering local promoters, campus festivals, and corporate giants."
+          />
+          <GlassCard 
+            icon={<Globe className="w-6 h-6" />} 
+            title="Expansion" 
+            color="secondary"
+            desc="Bridging communities across borders through the power of live sound."
+          />
+        </div>
+
+        {/* Why Choose Us - Feature Grid */}
+        <div className="relative bg-black/20 backdrop-blur-3xl rounded-[4rem] p-10 lg:p-20 border border-white/10 shadow-2xl">
+          <div className="grid md:grid-cols-3 gap-16">
+            <FeatureItem 
+              icon={<ShieldCheck className="w-8 h-8" />} 
+              title="Effortless Entry" 
+              text="Purchase and scan tickets instantly with QR technology—no stress, no paper."
+            />
+            <FeatureItem 
+              icon={<BellRing className="w-8 h-8" />} 
+              title="Live Updates" 
+              text="Stay informed with real-time alerts for drops, changes, and VIP exclusives."
+            />
+            <FeatureItem 
+              icon={<BarChart3 className="w-8 h-8" />} 
+              title="Scale Fast" 
+              text="Organizers get deep analytics and management tools to grow their audience."
+            />
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="mt-20 text-center">
-          <h3 className="text-2xl text-primary font-semibold mb-3">
-            Ready to Streamline Your Event?
+        {/* CTA SECTION */}
+        <div className="text-center py-20">
+          <h3 className="text-4xl font-black uppercase italic tracking-tighter text-base-content mb-8">
+            The Scene is Waiting.
           </h3>
-          <p className="text-base-content/70 mb-6">
-            Whether you're hosting or attending—we’re here to make your experience seamless, exciting, and unforgettable.
-          </p>
           <button
             onClick={() => navigate("/events")}
-            className="btn btn-primary btn-wide"
+            className="group btn btn-primary px-12 rounded-2xl h-16 font-black uppercase tracking-[0.3em] text-[10px] hover:scale-105 transition-all shadow-xl shadow-primary/40 border-none"
           >
-            Explore Upcoming Events
+            Explore Full Scene
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
           </button>
         </div>
       </div>
     </section>
   );
 };
+
+/* --- HELPER COMPONENTS --- */
+
+const GlassCard = ({ icon, title, desc, color }: { icon: any, title: string, desc: string, color: 'primary' | 'secondary' }) => (
+  <div className="group relative rounded-[2.5rem] p-[1px] bg-gradient-to-b from-white/20 to-transparent hover:from-primary/40 transition-all duration-700">
+    <div className="h-full bg-white/5 backdrop-blur-2xl rounded-[2.4rem] p-8 border border-white/5 flex flex-col items-center text-center">
+      <div className={`w-12 h-12 rounded-2xl ${color === 'primary' ? 'bg-primary/20 text-primary' : 'bg-secondary/20 text-secondary'} flex items-center justify-center mb-6`}>
+        {icon}
+      </div>
+      <h2 className="text-xl font-black uppercase italic tracking-tighter text-base-content mb-3">{title}</h2>
+      <p className="text-base-content/40 text-[11px] font-bold leading-relaxed italic uppercase tracking-wider">{desc}</p>
+    </div>
+  </div>
+);
+
+const FeatureItem = ({ icon, title, text }: { icon: any, title: string, text: string }) => (
+  <div className="text-center md:text-left">
+    <div className="text-primary mb-6 flex justify-center md:justify-start">{icon}</div>
+    <h4 className="font-black uppercase italic text-xs tracking-widest mb-4 text-base-content">
+      {title}
+    </h4>
+    <p className="text-sm text-base-content/50 font-medium italic leading-relaxed">
+      {text}
+    </p>
+  </div>
+);

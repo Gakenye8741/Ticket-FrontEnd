@@ -1,13 +1,11 @@
-
-
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { RootState } from '../../App/store';
 
-interface FormData{
-  eventId: number,
-  url: string,
-  type: string
-
+// ✅ Rename this to avoid clashing with the built-in browser FormData
+export interface MediaPayload {
+  eventId: number;
+  url: string;
+  type: string;
 }
 
 export const mediaApi = createApi({
@@ -24,12 +22,13 @@ export const mediaApi = createApi({
   }),
   tagTypes: ['media', 'mediaByEvent', 'mediaByType'],
   endpoints: (builder) => ({
-    // ➕ Create Media (with file upload)
+    // ➕ Create Media
     createMedia: builder.mutation({
-      query: (formData: FormData) => ({
+      // ✅ Use the new interface name here
+      query: (mediaData: MediaPayload) => ({
         url: 'media',
         method: 'POST',
-        body: formData,
+        body: mediaData,
       }),
       invalidatesTags: ['media'],
     }),
@@ -44,25 +43,22 @@ export const mediaApi = createApi({
       invalidatesTags: ['media'],
     }),
 
-    // 📥 Get All Media
+    // ... (rest of the code remains the same)
     getAllMedia: builder.query({
       query: () => 'media',
       providesTags: ['media'],
     }),
 
-    // 📥 Get Media by Event ID
     getMediaByEventId: builder.query({
       query: (eventId) => `media/event/${eventId}`,
       providesTags: ['mediaByEvent'],
     }),
 
-    // 📥 Get Media by Type
     getMediaByType: builder.query({
       query: (type: 'image' | 'video') => `media/type/${type}`,
       providesTags: ['mediaByType'],
     }),
 
-    // ❌ Delete Media
     deleteMedia: builder.mutation({
       query: (mediaId: number) => ({
         url: `media/${mediaId}`,

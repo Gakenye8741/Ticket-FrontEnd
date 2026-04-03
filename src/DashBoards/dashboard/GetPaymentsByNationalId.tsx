@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { paymentApi } from '../../features/APIS/PaymentApi';
+import { eventApi } from '../../features/APIS/EventsApi'; // ✅ Added Event API import
 import type { RootState } from '../../App/store';
 
 const GetPaymentsByNationalId: React.FC = () => {
   const nationalId = useSelector((state: RootState) => state.auth.user?.nationalId);
   const firstName = useSelector((state: RootState) => state.auth.user?.firstName);
 
+  // 📥 Fetch Payments
   const {
     data: payments,
     isLoading,
@@ -16,6 +18,46 @@ const GetPaymentsByNationalId: React.FC = () => {
   } = paymentApi.useGetPaymentsByNationalIdQuery(nationalId, {
     skip: !nationalId,
   });
+
+  // 📥 Fetch Events to map IDs to Names
+  const { data: allEvents } = eventApi.useGetAllEventsQuery(undefined);
+
+  // 🧠 Create an Event Name Lookup Map
+  const eventMap = useMemo(() => {
+    if (!allEvents) return {};
+    return allEvents.reduce((acc: any, event: any) => {
+      acc[event.eventId] = event.title;
+      return acc;
+    }, {});
+  }, [allEvents]);
+
+  // 📊 Analytics Calculations (Today, Week, Month, Year)
+  const stats = useMemo(() => {
+    if (!payments) return { today: 0, week: 0, month: 0, year: 0 };
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    
+    const curr = new Date();
+    const first = curr.getDate() - curr.getDay();
+    const startOfWeek = new Date(curr.setDate(first)).setHours(0,0,0,0);
+    
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    const startOfYear = new Date(now.getFullYear(), 0, 1).getTime();
+
+    return payments.reduce((acc: any, p: any) => {
+      const pDate = new Date(p.paymentDate).getTime();
+      const pAmount = parseFloat(p.amount);
+
+      if (p.paymentStatus === 'Completed' || p.paymentStatus === 'PAID') {
+        if (pDate >= startOfToday) acc.today += pAmount;
+        if (pDate >= startOfWeek) acc.week += pAmount;
+        if (pDate >= startOfMonth) acc.month += pAmount;
+        if (pDate >= startOfYear) acc.year += pAmount;
+      }
+      return acc;
+    }, { today: 0, week: 0, month: 0, year: 0 });
+  }, [payments]);
 
   const [currentPage, setCurrentPage] = React.useState(1);
   const [statusFilter, setStatusFilter] = React.useState<string>('All');
@@ -61,6 +103,23 @@ const GetPaymentsByNationalId: React.FC = () => {
           </h2>
           <h2 className="text-3xl font-bold mb-4 text-primary text-center">💳 My Payments</h2>
 
+          {/* 📊 Analytics Section */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {[
+              { label: 'Today', amount: stats.today, color: 'text-blue-600' },
+              { label: 'This Week', amount: stats.week, color: 'text-purple-600' },
+              { label: 'This Month', amount: stats.month, color: 'text-indigo-600' },
+              { label: 'This Year', amount: stats.year, color: 'text-primary' },
+            ].map((item, idx) => (
+              <div key={idx} className="bg-base-200 p-4 rounded-xl border border-base-300 shadow-sm text-center">
+                <p className="text-[10px] uppercase font-black opacity-50 mb-1">{item.label}</p>
+                <p className={`text-xl font-black ${item.color}`}>
+                  {item.amount.toLocaleString()} <span className="text-[10px]">KSH</span>
+                </p>
+              </div>
+            ))}
+          </div>
+
           {/* ✅ Filter Dropdown */}
           <div className="flex justify-center mb-6">
             <select
@@ -87,7 +146,7 @@ const GetPaymentsByNationalId: React.FC = () => {
                 <thead className="text-xs uppercase bg-base-200 text-primary font-semibold">
                   <tr>
                     <th className="px-4 py-2">Transaction ID</th>
-                    <th className="px-4 py-2">Booking ID</th>
+                    <th className="px-4 py-2">Event Name</th> {/* ✅ NEW HEADER */}
                     <th className="px-4 py-2">Amount</th>
                     <th className="px-4 py-2">Status</th>
                     <th className="px-4 py-2">Method</th>
@@ -102,13 +161,22 @@ const GetPaymentsByNationalId: React.FC = () => {
                       transition={{ type: 'spring', stiffness: 300 }}
                       className="bg-base-100 hover:bg-base-200 transition duration-200 shadow rounded-xl"
                     >
-                      <td className="px-4 py-3 rounded-l-xl">{payment.transactionId || 'N/A'}</td>
-                      <td className="px-4 py-3">{payment.bookingId}</td>
-                      <td className="px-4 py-3">KSH {(payment.amount / 100).toFixed(2)}</td>
+                      <td className="px-4 py-3 rounded-l-xl font-mono text-xs opacity-70">
+                        {payment.transactionId || 'N/A'}
+                      </td>
+                      
+                      {/* ✅ Logic: Look up event title by ID from the Map */}
+                      <td className="px-4 py-3 font-bold text-secondary">
+                        {eventMap[payment.booking?.eventId] || `Event #${payment.booking?.eventId}`}
+                      </td>
+
+                      <td className="px-4 py-3 font-medium text-lg">
+                        KSH {Number(payment.amount).toFixed(2)}
+                      </td>
                       <td className="px-4 py-3">
                         <span
                           className={`px-2 py-1 rounded text-xs font-medium ${
-                            payment.paymentStatus === 'PAID'
+                            payment.paymentStatus === 'Completed' || payment.paymentStatus === 'PAID'
                               ? 'bg-green-100 text-green-800'
                               : payment.paymentStatus === 'FAILED'
                               ? 'bg-red-100 text-red-800'

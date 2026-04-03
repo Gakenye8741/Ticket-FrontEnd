@@ -6,41 +6,136 @@ const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontFamily: 'Helvetica',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#FFFFFF',
+    fontSize: 10,
+    color: '#1A1A1A',
   },
-  header: {
-    fontSize: 26,
+  borderFrame: {
+    border: '1.5pt solid #4f46e5',
+    height: '100%',
+    padding: 25,
+    position: 'relative',
+  },
+  warningBanner: {
+    backgroundColor: '#FEF2F2',
+    border: '1pt solid #FECACA',
+    color: '#991B1B',
+    padding: 10,
     marginBottom: 20,
     textAlign: 'center',
-    color: '#4f46e5',
+    borderRadius: 4,
   },
-  eventName: {
-    fontSize: 20,
-    marginBottom: 10,
-    textAlign: 'center',
+  warningText: {
+    fontSize: 9,
     fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottom: '1pt solid #E5E7EB',
+    paddingBottom: 15,
+    marginBottom: 25,
+  },
+  brand: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#4f46e5',
+    letterSpacing: -0.5,
+  },
+  statusBadge: {
+    backgroundColor: '#DCFCE7',
+    color: '#166534',
+    padding: '4 10',
+    borderRadius: 12,
+    fontSize: 8,
+    fontWeight: 'bold',
+  },
+  eventTitle: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textTransform: 'uppercase',
     color: '#111827',
   },
-  section: {
-    marginBottom: 12,
-    paddingHorizontal: 10,
+  metaSection: {
+    flexDirection: 'row',
+    marginBottom: 35,
+    gap: 30,
   },
-  row: {
-    marginBottom: 6,
+  infoBlock: {
+    flex: 1,
   },
   label: {
-    fontWeight: 700,
-    color: '#374151',
+    fontSize: 7,
+    color: '#6B7280',
+    textTransform: 'uppercase',
+    marginBottom: 3,
+    letterSpacing: 0.8,
   },
   value: {
-    color: '#111827',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  table: {
+    marginTop: 15,
+    borderTop: '0.5pt solid #E5E7EB',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottom: '0.5pt solid #F3F4F6',
+    paddingVertical: 10,
+  },
+  tableCellLabel: {
+    flex: 1,
+    fontSize: 9,
+    color: '#4B5563',
+  },
+  tableCellValue: {
+    flex: 1,
+    textAlign: 'right',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  totalSection: {
+    marginTop: 20,
+    padding: 12,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 6,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    border: '0.5pt solid #E5E7EB',
+  },
+  totalLabel: {
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  totalValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#4f46e5',
+  },
+  securityNote: {
+    marginTop: 'auto',
+    paddingTop: 15,
+    borderTop: '1pt dashed #E5E7EB',
+    textAlign: 'center',
+  },
+  hash: {
+    fontFamily: 'Courier',
+    fontSize: 7,
+    color: '#9CA3AF',
+    marginTop: 4,
   },
   footer: {
-    marginTop: 30,
-    fontSize: 12,
+    fontSize: 8,
+    color: '#9CA3AF',
     textAlign: 'center',
-    color: 'gray',
-  },
+    marginTop: 15,
+  }
 });
 
 const TicketDocument: React.FC<TicketDocumentProps> = ({
@@ -50,70 +145,87 @@ const TicketDocument: React.FC<TicketDocumentProps> = ({
   booking,
   total,
   paymentStatus,
-}) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <Text style={styles.header}>🎫 TicketStream Events</Text>
-      <Text style={styles.eventName}>Event: {event.title}</Text>
+}) => {
+  const securityHash = `TXN-${booking.bookingId}-${user.nationalId}-${Date.now()}`.toUpperCase();
 
-      <View style={styles.section}>
-        <View style={styles.row}>
-          <Text>
-            <Text style={styles.label}>Name: </Text>
-            <Text style={styles.value}>{user.firstName} {user.lastName}</Text>
-          </Text>
-        </View>
-
-        <View style={styles.row}>
-          <Text>
-            <Text style={styles.label}>National ID: </Text>
-            <Text style={styles.value}>{user.nationalId}</Text>
-          </Text>
-        </View>
-
-        <View style={styles.row}>
-          <Text>
-            <Text style={styles.label}>Ticket Type: </Text>
-            <Text style={styles.value}>{ticketType.name}</Text>
-          </Text>
-        </View>
-
-        <View style={styles.row}>
-          <Text>
-            <Text style={styles.label}>Quantity: </Text>
-            <Text style={styles.value}>{booking.quantity}</Text>
-          </Text>
-        </View>
-
-        <View style={styles.row}>
-          <Text>
-            <Text style={styles.label}>Total: </Text>
-            <Text style={styles.value}>${total.toFixed(2)}</Text>
-          </Text>
-        </View>
-
-        <View style={styles.row}>
-          <Text>
-            <Text style={styles.label}>Payment Status: </Text>
-            <Text style={styles.value}>{paymentStatus}</Text>
-          </Text>
-        </View>
-
-        <View style={styles.row}>
-          <Text>
-            <Text style={styles.label}>Booking Date: </Text>
-            <Text style={styles.value}>
-              {new Date(booking.createdAt).toLocaleString()}
+  return (
+    <Document title={`PREVIEW_${event.title}`}>
+      <Page size="A4" style={styles.page}>
+        <View style={styles.borderFrame}>
+          
+          {/* Disclaimer Protocol */}
+          <View style={styles.warningBanner}>
+            <Text style={styles.warningText}>
+              NOTICE: THIS IS A BOOKING SUMMARY / RECEIPT ONLY.
             </Text>
-          </Text>
-        </View>
-      </View>
+            <Text style={[styles.warningText, { fontSize: 7, marginTop: 2 }]}>
+              THE OFFICIAL SCANNABLE TICKET HAS BEEN DISPATCHED TO YOUR REGISTERED EMAIL.
+            </Text>
+          </View>
 
-      <Text style={styles.footer}>
-        ✅ Thank you for booking with TicketStream Events!
-      </Text>
-    </Page>
-  </Document>
-);
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.brand}>TICKETSTREAM_VAULT</Text>
+            <View style={styles.statusBadge}>
+              <Text>● {paymentStatus.toUpperCase()}</Text>
+            </View>
+          </View>
+
+          {/* Event Info */}
+          <Text style={styles.eventTitle}>{event.title}</Text>
+          <View style={styles.metaSection}>
+            <View style={styles.infoBlock}>
+              <Text style={styles.label}>Attendee</Text>
+              <Text style={styles.value}>{user.firstName} {user.lastName}</Text>
+            </View>
+            <View style={styles.infoBlock}>
+              <Text style={styles.label}>National ID</Text>
+              <Text style={styles.value}>{user.nationalId}</Text>
+            </View>
+            <View style={styles.infoBlock}>
+              <Text style={styles.label}>Booking Date</Text>
+              <Text style={styles.value}>{new Date(booking.createdAt).toLocaleDateString('en-KE')}</Text>
+            </View>
+          </View>
+
+          {/* Summary Table */}
+          <View style={styles.table}>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellLabel}>Category</Text>
+              <Text style={styles.tableCellValue}>{ticketType.name}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellLabel}>Quantity</Text>
+              <Text style={styles.tableCellValue}>{booking.quantity}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellLabel}>Reference ID</Text>
+              <Text style={styles.tableCellValue}>#BK-{booking.bookingId}</Text>
+            </View>
+          </View>
+
+          {/* Currency Display */}
+          <View style={styles.totalSection}>
+            <Text style={styles.totalLabel}>TOTAL PAID</Text>
+            <Text style={styles.totalValue}>KSH {total.toLocaleString('en-KE')}</Text>
+          </View>
+
+          {/* Verification Section */}
+          <View style={styles.securityNote}>
+            <Text style={{ fontSize: 8, fontWeight: 'bold', color: '#4B5563' }}>DATA_INTEGRITY_VERIFIED</Text>
+            <Text style={[styles.footer, { marginTop: 5, color: '#6B7280' }]}>
+              Please present your Email Ticket for entry. This PDF is your proof of payment.
+            </Text>
+            <Text style={styles.hash}>SEC_HASH: {securityHash}</Text>
+          </View>
+
+        </View>
+        <Text style={styles.footer}>
+          Generated via TicketStream Systems © 2026 | Nyeri, Kenya
+        </Text>
+      </Page>
+    </Document>
+  );
+};
 
 export default TicketDocument;

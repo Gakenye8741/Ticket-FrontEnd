@@ -5,9 +5,9 @@ import { Navbar } from "../components/Navbar";
 import { AboutEvent } from "../content-folders/About/About";
 
 export const About = () => {
-  useEffect(() => {
-    toast.success("Welcome to the About Page 🎉");
-  }, []);
+  // useEffect(() => {
+  //   toast.success("Welcome to the About Page 🎉");
+  // }, []);
 
   return (
     <div>

@@ -6,13 +6,18 @@ import {
   ShoppingCart,
   CalendarDays,
   Clock,
-  Building,
   MapPin,
-  Users,
-  Tag,
-  Ticket,
+  ArrowRight,
+  ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import { ticketApi } from "../../features/APIS/ticketsType.Api";
+
+// Swiper Imports for the Mobile Carousel
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination, Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
 
 type Venue = {
   name: string;
@@ -51,43 +56,84 @@ export const EventCard = () => {
     pollingInterval: 3000,
   });
 
-  const displayedEvents = allEvents.slice(0, 3);
+  // Display up to 6 events to make the carousel feel "full"
+  const displayedEvents = allEvents.slice(0, 6);
 
   return (
-    <section className="min-h-screen py-16 px-6 bg-base-100 text-base-content">
-      <div className="max-w-7xl mx-auto">
-        <h2 className="text-4xl font-extrabold text-center text-primary mb-6">Upcoming Events</h2>
-        <p className="text-lg text-base-content/70 max-w-3xl mx-auto text-center mb-10">
-          At <span className="text-primary font-semibold">TicketStream</span>, we bring you the best live entertainment experiences.
-        </p>
+    <section className="relative min-h-screen py-2 px-4 sm:px-6 bg-transparent overflow-hidden">
+      <div className="max-w-7xl mx-auto relative z-10">
+        
+
 
         {error ? (
-          <div className="text-error text-center">Something went wrong.</div>
+          <div className="text-error text-center font-bold bg-error/10 p-6 rounded-2xl backdrop-blur-md border border-error/20 max-w-lg mx-auto">
+            Failed to sync with the stream. Please refresh.
+          </div>
         ) : isLoading ? (
-          <div className="flex justify-center h-64 items-center">
-            <PuffLoader color="#06b6d4" />
+          <div className="flex flex-col justify-center h-96 items-center gap-4">
+            <PuffLoader color="#06b6d4" size={80} />
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40">Syncing Feed</span>
           </div>
         ) : displayedEvents.length === 0 ? (
-          <div className="text-center text-primary text-lg">No events found.</div>
-        ) : (
-          <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {displayedEvents.map((event: EventDetails) => (
-              <EventCardItem key={event.eventId} event={event} navigate={navigate} />
-            ))}
+          <div className="text-center text-primary/60 text-xl italic p-20 border-2 border-dashed border-primary/20 rounded-[3rem]">
+            The stage is currently empty. Stay tuned.
           </div>
+        ) : (
+          <>
+            {/* MOBILE & TABLET CAROUSEL (Visible up to lg breakpoint) */}
+            <div className="lg:hidden">
+              <Swiper
+                modules={[Pagination, Autoplay]}
+                spaceBetween={20}
+                slidesPerView={1.1} // Shows a peek of the next card to encourage scrolling
+                centeredSlides={true}
+                loop={displayedEvents.length > 1}
+                autoplay={{ delay: 4000, disableOnInteraction: false }}
+                pagination={{ 
+                  clickable: true, 
+                  dynamicBullets: true 
+                }}
+                className="pb-16 !overflow-visible"
+              >
+                {displayedEvents.map((event: EventDetails) => (
+                  <SwiperSlide key={event.eventId} className="h-auto">
+                    <EventCardItem event={event} navigate={navigate} />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+              {/* Hint for users */}
+              <p className="text-center text-[10px] font-bold uppercase tracking-widest opacity-30 -mt-8">
+                Swipe to browse events
+              </p>
+            </div>
+
+            {/* DESKTOP GRID (Visible from lg breakpoint up) */}
+            <div className="hidden lg:grid gap-8 grid-cols-3">
+              {displayedEvents.slice(0, 3).map((event: EventDetails) => (
+                <EventCardItem key={event.eventId} event={event} navigate={navigate} />
+              ))}
+            </div>
+          </>
         )}
 
         {allEvents.length > 3 && (
-          <div className="mt-12 text-center">
+          <div className="mt-20 text-center">
             <button
               onClick={() => navigate("/events")}
-              className="btn btn-primary btn-wide"
+              className="group btn btn-primary px-12 rounded-2xl h-16 font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-primary/20 border-none"
             >
-              See More Events
+              Explore Full Scene
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
             </button>
           </div>
         )}
       </div>
+
+      {/* Custom Styles for Swiper dots to match your Glassmorphism theme */}
+      <style>{`
+        .swiper-pagination-bullet { background: hsl(var(--bc)) !important; opacity: 0.2; }
+        .swiper-pagination-bullet-active { background: hsl(var(--p)) !important; opacity: 1; width: 20px; border-radius: 4px; transition: all 0.3s; }
+      `}</style>
     </section>
   );
 };
@@ -107,75 +153,111 @@ const EventCardItem = ({
     : null;
 
   const price = parseFloat(event.ticketPrice as string);
-  const ticketsSold = Number(event.ticketsSold) || 0;
-  const ticketsTotal = Number(event.ticketsTotal) || 0;
-  const available = ticketsTotal - ticketsSold;
+  const available = (Number(event.ticketsTotal) || 0) - (Number(event.ticketsSold) || 0);
 
   return (
-    <div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-all duration-300">
-      {firstImage ? (
-        <figure>
-          <img
-            src={firstImage.url}
-            alt={event.title}
-            className="w-full h-48 object-cover"
-          />
-        </figure>
-      ) : (
-        <div className="w-full h-48 flex items-center justify-center text-primary-content bg-primary/10">
-          No Image Available
-        </div>
-      )}
-
-      <div className="card-body">
-        <h3 className="card-title text-primary">{event.title}</h3>
-        <p className="text-success font-bold text-lg">
-          Ksh{isNaN(price) ? "0.00" : price.toFixed(2)}
-        </p>
-        <p className="text-base-content/70 line-clamp-3">
-          {event.description || "No description available."}
-        </p>
-
-        <div className="grid grid-cols-2 gap-3 text-sm text-base-content/80 border border-base-300 rounded-lg p-4 mt-4 bg-base-100">
-          <div className="flex items-center gap-2"><CalendarDays className="w-4 h-4 text-primary" /><span>{event.date}</span></div>
-          <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-primary" /><span>{event.time}</span></div>
-          <div className="flex items-center gap-2"><Building className="w-4 h-4 text-primary" /><span>{event.venue?.name || "N/A"}</span></div>
-          <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-primary" /><span>{event.venue?.address || "N/A"}</span></div>
-          <div className="flex items-center gap-2"><Users className="w-4 h-4 text-primary" /><span>{event.venue?.capacity ?? "N/A"}</span></div>
-          <div className="flex items-center gap-2"><Tag className="w-4 h-4 text-primary" /><span>{event.category || "Uncategorized"}</span></div>
-          <div className="flex items-center gap-2"><Ticket className="w-4 h-4 text-primary" /><span>Sold: {ticketsSold}</span></div>
-          <div className="flex items-center gap-2"><Ticket className="w-4 h-4 text-primary" /><span>Available: {available}</span></div>
-        </div>
-
-        {ticketTypes.length > 0 && (
-          <div className="mt-4">
-            <h4 className="text-base font-semibold mb-2 text-primary">Ticket Types</h4>
-            <ul className="space-y-1 text-sm">
-              {ticketTypes.map((type: TicketTypeData) => {
-                const sold = Number(type.sold) || 0;
-                const available = Number(type.quantity) - sold;
-
-                return (
-                  <li key={type.ticketTypeId} className="flex justify-between">
-                    <span>{type.name}</span>
-                    <span>Sold: {sold}</span>
-                    <span>Available: {available}</span>
-                  </li>
-                );
-              })}
-            </ul>
+    <div className="group relative rounded-[2.5rem] p-[1px] bg-gradient-to-b from-white/20 to-transparent hover:from-primary/40 transition-all duration-500 h-full">
+      {/* High-Blur Glassmorphism Container */}
+      <div className="flex flex-col h-full bg-white/5 dark:bg-black/20 backdrop-blur-2xl rounded-[2.4rem] overflow-hidden border border-white/5 shadow-2xl">
+        
+        {/* Media Section */}
+        <figure className="relative h-60 sm:h-64 overflow-hidden m-3 rounded-[2rem]">
+          {firstImage ? (
+            <img
+              src={firstImage.url}
+              alt={event.title}
+              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-base-300/30 italic text-base-content/20 font-bold uppercase tracking-widest text-[10px]">
+              Visual Pending
+            </div>
+          )}
+          
+          {/* Price Overlay */}
+          <div className="absolute top-4 right-4 px-4 py-2 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 text-white font-black text-[10px] tracking-widest shadow-2xl">
+            KSH {isNaN(price) ? "0" : price.toLocaleString()}
           </div>
-        )}
+          
+          {/* Category Tag */}
+          <div className="absolute bottom-4 left-4 px-3 py-1.5 rounded-xl bg-primary/80 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest shadow-lg">
+            {event.category || "General"}
+          </div>
+        </figure>
 
-        <div className="card-actions mt-4">
-          <button
-            onClick={() => navigate(`/events/${event.eventId}`)}
-            className="btn btn-primary w-full"
-            disabled={available <= 0}
-          >
-            <ShoppingCart className="w-5 h-5" />
-            {available <= 0 ? "Sold Out" : "Book Now"}
-          </button>
+        <div className="p-8 pt-2 flex flex-col flex-grow">
+          <h3 className="text-2xl font-black tracking-tighter uppercase italic text-base-content leading-none mb-3 group-hover:text-primary transition-colors">
+            {event.title}
+          </h3>
+
+          <p className="text-sm font-medium text-base-content/50 line-clamp-2 italic mb-8 leading-relaxed">
+            {event.description || "Join the most exclusive event of the campus season."}
+          </p>
+
+          {/* Details Grid (Glass Sub-layer) */}
+          <div className="grid grid-cols-2 gap-4 p-5 rounded-3xl bg-white/5 border border-white/5 mb-8 shadow-inner">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-primary">
+                 <CalendarDays className="w-3.5 h-3.5" />
+                 <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Date</span>
+              </div>
+              <span className="text-xs font-bold">{event.date}</span>
+            </div>
+            
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-primary">
+                 <Clock className="w-3.5 h-3.5" />
+                 <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Starts</span>
+              </div>
+              <span className="text-xs font-bold">{event.time}</span>
+            </div>
+
+            <div className="flex flex-col gap-1 col-span-2 mt-2 pt-2 border-t border-white/5">
+              <div className="flex items-center gap-2 text-secondary">
+                 <MapPin className="w-3.5 h-3.5" />
+                 <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Location</span>
+              </div>
+              <span className="text-xs font-bold truncate opacity-90 italic">
+                {event.venue?.name || "Main Campus"}
+              </span>
+            </div>
+          </div>
+
+          {/* Available Tiers Pills */}
+          {ticketTypes.length > 0 && (
+             <div className="mb-8 space-y-2">
+                <div className="flex flex-wrap gap-2 justify-center">
+                   {ticketTypes.slice(0, 3).map((type: TicketTypeData) => (
+                      <span key={type.ticketTypeId} className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[8px] font-bold opacity-60 uppercase">
+                        {type.name}
+                      </span>
+                   ))}
+                </div>
+             </div>
+          )}
+
+          {/* Action Button */}
+          <div className="mt-auto">
+            <button
+              onClick={() => navigate(`/events/${event.eventId}`)}
+              className={`btn w-full rounded-2xl border-none h-14 font-black uppercase text-[10px] tracking-[0.3em] transition-all duration-300 shadow-xl
+                ${available <= 0 
+                  ? "bg-base-content/10 text-base-content/20 cursor-not-allowed" 
+                  : "btn-primary hover:shadow-primary/40 active:scale-95"
+                }`}
+              disabled={available <= 0}
+            >
+              {available <= 0 ? (
+                "Sold Out"
+              ) : (
+                <div className="flex items-center justify-center">
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Get Access
+                  <ChevronRight className="w-4 h-4 ml-1 opacity-50 group-hover:translate-x-1 transition-transform" />
+                </div>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
