@@ -71,12 +71,18 @@ export const Navbar = () => {
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
           
           {/* Logo Section */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:rotate-12 transition-transform shrink-0">
-              <Sparkles className="text-white w-6 h-6" />
+          <Link to="/" className="flex items-center gap-2 group max-w-[50%] sm:max-w-none">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:rotate-12 transition-transform shrink-0">
+              <Sparkles className="text-white w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div className="w-32 sm:w-44 overflow-hidden">
-              <span ref={typedRef} className="text-2xl font-black italic uppercase tracking-tighter text-base-content whitespace-nowrap" />
+            {/* FIX: Responsive width and font sizing for the typing text.
+                Used text-lg for mobile and text-2xl for desktop to keep it proportional.
+            */}
+            <div className="w-28 sm:w-44 overflow-hidden flex items-center min-h-[40px]">
+              <span 
+                ref={typedRef} 
+                className="text-lg sm:text-2xl font-black italic uppercase tracking-tighter text-base-content whitespace-nowrap truncate" 
+              />
             </div>
           </Link>
 
@@ -106,15 +112,15 @@ export const Navbar = () => {
             {isAuthenticated ? (
               <div className="dropdown dropdown-end group">
                 <label tabIndex={0} className="relative cursor-pointer block">
-                  <div className="flex items-center gap-2 bg-base-100/50 backdrop-blur-md border border-white/10 p-1 pr-3 rounded-2xl hover:border-primary/50 transition-all">
-                    <div className="w-8 h-8 rounded-xl overflow-hidden shadow-inner">
+                  <div className="flex items-center gap-2 bg-base-100/50 backdrop-blur-md border border-white/10 p-1 pr-2 sm:pr-3 rounded-2xl hover:border-primary/50 transition-all">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden shadow-inner">
                       <img
                         src={profileImageUrl || '/default-avatar.png'}
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest opacity-70">
+                    <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest opacity-70">
                       {firstName}
                     </span>
                     <ChevronDown size={14} className="opacity-40 group-hover:rotate-180 group-hover:text-primary transition-all duration-300" />
@@ -139,7 +145,7 @@ export const Navbar = () => {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Link to="/login" className="btn btn-primary btn-sm rounded-xl px-6 font-black uppercase italic tracking-widest border-none shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
+                <Link to="/login" className="btn btn-primary btn-xs sm:btn-sm rounded-xl px-4 sm:px-6 font-black uppercase italic tracking-widest border-none shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
                   Login
                 </Link>
               </div>
@@ -151,7 +157,6 @@ export const Navbar = () => {
       {/* --- REFINED MOBILE FLOATING DOCK (Fixed Bottom) --- */}
       <div className="lg:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[95%] max-w-[440px] z-[60]">
         <div className="relative group">
-          {/* Subtle Outer Glow */}
           <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-transparent to-secondary/20 rounded-[2.5rem] blur-xl opacity-50"></div>
           
           <div className="relative bg-base-100/40 backdrop-blur-3xl border border-white/10 rounded-[2.2rem] shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-1.5 flex justify-around items-center">
@@ -168,16 +173,15 @@ export const Navbar = () => {
                   to={item.path} 
                   className="relative flex-1 flex flex-col items-center justify-center py-2 group/item"
                 >
-                  <div className={`p-2.5 rounded-2xl transition-all duration-500 ease-out flex items-center justify-center
+                  <div className={`p-2 sm:p-2.5 rounded-2xl transition-all duration-500 ease-out flex items-center justify-center
                     ${location.pathname === item.path 
                       ? "bg-primary text-white shadow-[0_0_20px_rgba(var(--p),0.4)] -translate-y-1 scale-110 rotate-[360deg]" 
                       : "text-base-content/40 group-hover/item:text-primary group-hover/item:scale-110 active:scale-90"
                     }`}
                   >
-                    <item.icon size={22} strokeWidth={location.pathname === item.path ? 2.5 : 2} />
+                    <item.icon size={20} strokeWidth={location.pathname === item.path ? 2.5 : 2} />
                   </div>
                   
-                  {/* Indicator Dot */}
                   {location.pathname === item.path && (
                     <div className="absolute -bottom-1 w-1 h-1 bg-primary rounded-full shadow-[0_0_8px_#var(--p)]"></div>
                   )}
