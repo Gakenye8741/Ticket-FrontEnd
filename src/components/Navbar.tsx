@@ -8,9 +8,7 @@ import {
   Info,
   CalendarDays,
   UserPlus,
-  LogIn,
   LogOut,
-  User,
   ChevronDown,
   LayoutDashboard,
   Phone,
@@ -36,7 +34,6 @@ export const Navbar = () => {
   const { data: userData } = useGetUserByNationalIdQuery(nationalId!, { skip: !nationalId });
   const profileImageUrl = userData?.profileImageUrl;
 
-  // Active link logic with glass pill background
   const getNavLinkClass = (path: string) => 
     location.pathname === path 
       ? "bg-primary/20 text-primary shadow-[0_0_15px_rgba(var(--p),0.2)]" 
@@ -75,13 +72,15 @@ export const Navbar = () => {
           
           {/* Logo Section */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:rotate-12 transition-transform">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:rotate-12 transition-transform shrink-0">
               <Sparkles className="text-white w-6 h-6" />
             </div>
-            <span ref={typedRef} className="text-2xl font-black italic uppercase tracking-tighter text-base-content" />
+            <div className="w-32 sm:w-44 overflow-hidden">
+              <span ref={typedRef} className="text-2xl font-black italic uppercase tracking-tighter text-base-content whitespace-nowrap" />
+            </div>
           </Link>
 
-          {/* Desktop Links (Hidden on Mobile) */}
+          {/* Desktop Links */}
           <div className="hidden lg:flex items-center gap-1 bg-white/5 backdrop-blur-md p-1.5 rounded-2xl border border-white/10">
             {[
               { path: "/", label: "Home", icon: Home },
@@ -101,13 +100,12 @@ export const Navbar = () => {
           </div>
 
           {/* User Profile & Theme Toggle */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <ThemeToggle />
             
             {isAuthenticated ? (
               <div className="dropdown dropdown-end group">
                 <label tabIndex={0} className="relative cursor-pointer block">
-                  {/* Visual Dropdown Indicator: Added Chevron + Border scale */}
                   <div className="flex items-center gap-2 bg-base-100/50 backdrop-blur-md border border-white/10 p-1 pr-3 rounded-2xl hover:border-primary/50 transition-all">
                     <div className="w-8 h-8 rounded-xl overflow-hidden shadow-inner">
                       <img
@@ -150,10 +148,13 @@ export const Navbar = () => {
         </div>
       </nav>
 
-      {/* --- MOBILE FLOATING DOCK (Fixed Bottom) --- */}
-      <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] max-w-[420px] z-[60]">
-        <div className="bg-base-100/60 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] p-2">
-          <ul className="flex justify-around items-center">
+      {/* --- REFINED MOBILE FLOATING DOCK (Fixed Bottom) --- */}
+      <div className="lg:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[95%] max-w-[440px] z-[60]">
+        <div className="relative group">
+          {/* Subtle Outer Glow */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-transparent to-secondary/20 rounded-[2.5rem] blur-xl opacity-50"></div>
+          
+          <div className="relative bg-base-100/40 backdrop-blur-3xl border border-white/10 rounded-[2.2rem] shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-1.5 flex justify-around items-center">
             {[
               { path: "/", icon: Home, label: "Home" },
               { path: "/about", icon: Info, label: "About" },
@@ -162,24 +163,33 @@ export const Navbar = () => {
               { path: "/login", icon: UserPlus, label: "Auth", hide: isAuthenticated }
             ].map((item) => (
               !item.hide && (
-                <li key={item.path} className="flex-1">
-                  <Link 
-                    to={item.path} 
-                    className={`flex flex-col items-center justify-center py-2 transition-all duration-300 rounded-2xl ${
-                      location.pathname === item.path 
-                        ? "text-primary scale-110" 
-                        : "text-base-content/40"
+                <Link 
+                  key={item.path}
+                  to={item.path} 
+                  className="relative flex-1 flex flex-col items-center justify-center py-2 group/item"
+                >
+                  <div className={`p-2.5 rounded-2xl transition-all duration-500 ease-out flex items-center justify-center
+                    ${location.pathname === item.path 
+                      ? "bg-primary text-white shadow-[0_0_20px_rgba(var(--p),0.4)] -translate-y-1 scale-110 rotate-[360deg]" 
+                      : "text-base-content/40 group-hover/item:text-primary group-hover/item:scale-110 active:scale-90"
                     }`}
                   >
-                    <div className={`p-2 rounded-xl transition-all duration-500 ${location.pathname === item.path ? "bg-primary text-white shadow-lg shadow-primary/40 rotate-[360deg]" : ""}`}>
-                       <item.icon size={20} />
-                    </div>
-                    <span className="text-[8px] font-black uppercase tracking-tighter mt-1">{item.label}</span>
-                  </Link>
-                </li>
+                    <item.icon size={22} strokeWidth={location.pathname === item.path ? 2.5 : 2} />
+                  </div>
+                  
+                  {/* Indicator Dot */}
+                  {location.pathname === item.path && (
+                    <div className="absolute -bottom-1 w-1 h-1 bg-primary rounded-full shadow-[0_0_8px_#var(--p)]"></div>
+                  )}
+                  
+                  <span className={`text-[7px] font-black uppercase tracking-widest mt-1 transition-opacity duration-300 
+                    ${location.pathname === item.path ? "opacity-100 text-primary" : "opacity-40"}`}>
+                    {item.label}
+                  </span>
+                </Link>
               )
             ))}
-          </ul>
+          </div>
         </div>
       </div>
     </>
