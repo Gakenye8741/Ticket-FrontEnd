@@ -7,13 +7,15 @@ import {
   useDeleteUserMutation,
   useGetAllUsersProfilesQuery,
   useUpdateAdminUserMutation,
-  useRegisterUserMutation,
 } from "../../features/APIS/UserApi";
 
 import "../adminDashboard/style.css";
-import { FaEdit } from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
+import { FaEdit, FaSearch, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaTrashCan, FaUserShield, FaUserGroup } from "react-icons/fa6";
 
+/**
+ * Interface for User Data
+ */
 interface userData {
   nationalId: number;
   address: string;
@@ -27,18 +29,19 @@ interface userData {
 const MySwal = withReactContent(Swal);
 
 export const AllUsers = () => {
+  // --- API Hooks ---
   const { data: AllUsersData = [], isLoading, error } = useGetAllUsersProfilesQuery({ pollingInterval: 30000 });
   const [deleteUser] = useDeleteUserMutation();
   const [updateUser] = useUpdateAdminUserMutation();
-  const [registerUser] = useRegisterUserMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 8; 
 
   const admin = useSelector((state: any) => state.auth.user);
   const adminName = admin?.firstName || "Admin";
 
+  // --- Search Logic ---
   const filteredUsers = AllUsersData.filter((user: userData) => {
     const lowerSearch = searchTerm.toLowerCase();
     return (
@@ -48,61 +51,90 @@ export const AllUsers = () => {
     );
   });
 
+  // --- Pagination Logic ---
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
+  // --- Action Handlers ---
+
   const handleDelete = async (nationalId: number) => {
     const confirm = await MySwal.fire({
-      title: "Are you sure?",
-      text: "This user will be permanently deleted.",
+      title: "Confirm Deletion",
+      text: "This user profile will be permanently removed.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#ef4444",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Yes, delete it!",
-      customClass: { popup: "glass-modal" },
+      cancelButtonColor: "#374151",
+      confirmButtonText: "Yes, delete it",
+      background: "rgba(15, 23, 42, 0.8)",
+      color: "#f3f4f6",
+      customClass: { popup: "glass-modal rounded-[2rem] border border-white/10 backdrop-blur-xl" },
     });
 
     if (confirm.isConfirmed) {
       try {
         await deleteUser(nationalId).unwrap();
         MySwal.fire({
-          title: "Deleted!",
-          text: "User has been removed.",
+          title: "Success",
+          text: "User profile removed.",
           icon: "success",
-          customClass: { popup: "glass-modal" },
+          background: "rgba(15, 23, 42, 0.8)",
+          color: "#f3f4f6",
         });
       } catch {
-        MySwal.fire({
-          title: "Error!",
-          text: "Failed to delete user.",
-          icon: "error",
-          customClass: { popup: "glass-modal" },
-        });
+        MySwal.fire({ title: "Error", text: "Delete operation failed.", icon: "error" });
       }
     }
   };
 
   const handleEdit = async (user: userData) => {
     const { value: formValues } = await MySwal.fire({
-      title: `Edit ${user.firstName} ${user.lastName}`,
+      title: `Update ${user.firstName}'s Profile`,
+      background: "rgba(15, 23, 42, 0.8)",
+      color: "#f8fafc",
+      customClass: { popup: "glass-modal rounded-[2.5rem] border border-blue-500/20 shadow-2xl backdrop-blur-xl" },
       html: `
-        <input id="swal-input1" class="swal2-input" placeholder="First Name" value="${user.firstName}">
-        <input id="swal-input2" class="swal2-input" placeholder="Last Name" value="${user.lastName}">
-        <input id="swal-input3" class="swal2-input" placeholder="Email" value="${user.email}">
-        <input id="swal-input4" class="swal2-input" placeholder="New Password (optional)" type="password">
-        <select id="swal-input5" class="swal2-input" style="background-color: #000; font-size: 1rem; padding: 0.5rem;">
-          <option value="user" ${user.role === "user" ? "selected" : ""}>👤 User</option>
-          <option value="admin" ${user.role === "admin" ? "selected" : ""}>🛡️ Admin</option>
-        </select>
+        <div class="flex flex-col gap-4 p-4 text-left">
+          <div class="grid grid-cols-2 gap-3">
+             <div>
+               <label class="text-[10px] uppercase font-black opacity-40 ml-2">First Name</label>
+               <input id="swal-input1" class="swal2-input !m-0 !w-full !rounded-xl !bg-slate-800/50 !border-slate-700" value="${user.firstName}">
+             </div>
+             <div>
+               <label class="text-[10px] uppercase font-black opacity-40 ml-2">Last Name</label>
+               <input id="swal-input2" class="swal2-input !m-0 !w-full !rounded-xl !bg-slate-800/50 !border-slate-700" value="${user.lastName}">
+             </div>
+          </div>
+          <div>
+            <label class="text-[10px] uppercase font-black opacity-40 ml-2">Email Address</label>
+            <input id="swal-input3" class="swal2-input !m-0 !w-full !rounded-xl !bg-slate-800/50 !border-slate-700" value="${user.email}">
+          </div>
+          <div class="relative">
+            <label class="text-[10px] uppercase font-black opacity-40 ml-2">Password (Change or View)</label>
+            <input id="swal-input4" type="password" class="swal2-input !m-0 !w-full !rounded-xl !bg-slate-800/50 !border-slate-700" placeholder="••••••••">
+            <button type="button" id="togglePassword" class="absolute right-4 bottom-3 text-primary text-xs font-bold uppercase tracking-widest">Show</button>
+          </div>
+          <div>
+            <label class="text-[10px] uppercase font-black opacity-40 ml-2">Access Role</label>
+            <select id="swal-input5" class="swal2-input !m-0 !w-full !rounded-xl !bg-slate-800/50 !border-slate-700">
+              <option value="user" ${user.role === "user" ? "selected" : ""}>Standard User</option>
+              <option value="admin" ${user.role === "admin" ? "selected" : ""}>Administrator</option>
+            </select>
+          </div>
+        </div>
       `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: "Update",
-      customClass: { popup: "glass-modal" },
+      didOpen: () => {
+        const toggleBtn = document.getElementById("togglePassword");
+        const passwordInput = document.getElementById("swal-input4") as HTMLInputElement;
+        toggleBtn?.addEventListener("click", () => {
+          const isPassword = passwordInput.type === "password";
+          passwordInput.type = isPassword ? "text" : "password";
+          toggleBtn.innerText = isPassword ? "Hide" : "Show";
+        });
+      },
       preConfirm: () => {
         const firstName = (document.getElementById("swal-input1") as HTMLInputElement).value;
         const lastName = (document.getElementById("swal-input2") as HTMLInputElement).value;
@@ -110,21 +142,13 @@ export const AllUsers = () => {
         const password = (document.getElementById("swal-input4") as HTMLInputElement).value;
         const role = (document.getElementById("swal-input5") as HTMLSelectElement).value;
 
-        if (!firstName || !lastName || !email || !role) {
-          Swal.showValidationMessage("All fields except password are required.");
-          return;
+        if (!firstName || !lastName || !email) {
+          Swal.showValidationMessage("Please fill in the required fields.");
+          return false;
         }
 
-        const payload: any = {
-          nationalId: user.nationalId,
-          firstName,
-          lastName,
-          email,
-          role,
-        };
-
+        const payload: any = { nationalId: user.nationalId, firstName, lastName, email, role };
         if (password) payload.password = password;
-
         return payload;
       },
     });
@@ -132,191 +156,156 @@ export const AllUsers = () => {
     if (formValues) {
       try {
         await updateUser(formValues).unwrap();
-        MySwal.fire({
-          title: "Success!",
-          text: "User updated successfully.",
-          icon: "success",
-          customClass: { popup: "glass-modal" },
-        });
+        MySwal.fire({ title: "Updated", icon: "success", background: "rgba(15, 23, 42, 0.8)", color: "#fff" });
       } catch {
-        MySwal.fire({
-          title: "Error!",
-          text: "Failed to update user.",
-          icon: "error",
-          customClass: { popup: "glass-modal" },
-        });
-      }
-    }
-  };
-
-  const handleAddUser = async () => {
-    const { value: formValues } = await MySwal.fire({
-      title: "Add New User",
-      html: `
-        <input id="add-fname" class="swal2-input" placeholder="First Name">
-        <input id="add-lname" class="swal2-input" placeholder="Last Name">
-        <input id="add-email" class="swal2-input" placeholder="Email">
-        <input id="add-password" class="swal2-input" placeholder="Password" type="password">
-        <input id="add-id" class="swal2-input" placeholder="National ID" type="number">
-        <input id="add-address" class="swal2-input" placeholder="Address">
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: "Create",
-      customClass: { popup: "glass-modal" },
-      preConfirm: () => {
-        const firstName = (document.getElementById("add-fname") as HTMLInputElement).value;
-        const lastName = (document.getElementById("add-lname") as HTMLInputElement).value;
-        const email = (document.getElementById("add-email") as HTMLInputElement).value;
-        const password = (document.getElementById("add-password") as HTMLInputElement).value;
-        const nationalId = Number((document.getElementById("add-id") as HTMLInputElement).value);
-        const address = (document.getElementById("add-address") as HTMLInputElement).value;
-
-        if (!firstName || !lastName || !email || !password || !nationalId || !address) {
-          Swal.showValidationMessage("Please fill in all fields.");
-          return;
-        }
-
-        return { firstName, lastName, email, password, nationalId, address };
-      },
-    });
-
-    if (formValues) {
-      try {
-        await registerUser({ ...formValues }).unwrap();
-        MySwal.fire({
-          title: "Success!",
-          text: "User created successfully.",
-          icon: "success",
-          customClass: { popup: "glass-modal" },
-        });
-      } catch {
-        MySwal.fire({
-          title: "Error!",
-          text: "Failed to create user.",
-          icon: "error",
-          customClass: { popup: "glass-modal" },
-        });
+        MySwal.fire({ title: "Update Failed", icon: "error" });
       }
     }
   };
 
   return (
-    <div className="min-h-screen p-6 bg-base-100 text-base-content">
-      <div className="mb-6 text-xl sm:text-2xl font-semibold text-primary">
-        👋 Hey {adminName}, welcome!
-      </div>
-
-      <div className="w-full max-w-7xl border border-base-300 bg-base-200 shadow-xl rounded-xl p-6 overflow-x-auto">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-          <h2 className="text-3xl font-bold text-primary">All Users</h2>
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-            <input
-              type="text"
-              placeholder="Search by name or ID"
-              className="px-4 py-2 w-full sm:w-64 rounded-md bg-base-300 text-base-content placeholder:text-base-content/70 focus:outline-none focus:ring focus:ring-primary"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <button
-              onClick={handleAddUser}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
-            >
-              ➕ Add User
-            </button>
+    <div className="min-h-screen bg-base-100 p-4 md:p-8 font-sans transition-all duration-300">
+      <div className="max-w-7xl mx-auto space-y-8">
+        
+        {/* Welcome Header */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-base-200/50 backdrop-blur-xl p-8 rounded-[2rem] border border-base-content/5 shadow-2xl">
+          <div>
+            <h1 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-base-content">
+              👋 Welcome, <span className="text-primary">{adminName}</span>
+            </h1>
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40 mt-2 ml-1">Central User Registry Dashboard</p>
+          </div>
+          <div className="text-right">
+             <p className="text-xs font-black uppercase tracking-widest opacity-30 italic">Administrator Portal</p>
           </div>
         </div>
 
-        {error ? (
-          <div className="text-error text-center text-lg font-semibold">
-            Something went wrong. Please try again.
-          </div>
-        ) : isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <PuffLoader color="#22d3ee" />
-          </div>
-        ) : filteredUsers.length === 0 ? (
-          <div className="text-center text-base-content text-lg">No matching users found.</div>
-        ) : (
-          <>
-            <div className="overflow-auto border-2 border-blue-500 rounded-lg shadow-xl bg-base-200/60 backdrop-blur-sm">
-              <table className="min-w-full text-sm text-base-content">
-                <thead>
-                  <tr className="bg-base-300 text-primary uppercase text-xs tracking-wider">
-                    <th className="px-4 py-3 text-left">First Name</th>
-                    <th className="px-4 py-3 text-left">Last Name</th>
-                    <th className="px-4 py-3 text-left">Email</th>
-                    <th className="px-4 py-3 text-left">National ID</th>
-                    <th className="px-4 py-3 text-left">Role</th>
-                    <th className="px-4 py-3 text-left">Created At</th>
-                    <th className="px-4 py-3 text-left">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedUsers.map((user: userData, index: number) => (
-                    <tr
-                      key={index}
-                      className="hover:bg-base-100 transition duration-200 border-b border-base-300"
-                    >
-                      <td className="px-4 py-2">{user.firstName}</td>
-                      <td className="px-4 py-2">{user.lastName}</td>
-                      <td className="px-4 py-2">{user.email}</td>
-                      <td className="px-4 py-2">{user.nationalId}</td>
-                      <td className="px-4 py-2">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-semibold ${
-                            user.role === "admin"
-                              ? "bg-green-600 text-white"
-                              : "bg-yellow-400 text-black"
-                          }`}
-                        >
-                          {user.role}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2">
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-2 space-x-2">
-                        <button
-                          onClick={() => handleEdit(user)}
-                          className="px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded text-white text-xs"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(user.nationalId)}
-                          className="px-3 py-1 bg-red-500 hover:bg-red-600 rounded text-white text-xs"
-                        >
-                          <FaDeleteLeft />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {/* Main Table Interface */}
+        <div className="bg-base-200/30 backdrop-blur-md border border-base-content/5 rounded-[3rem] shadow-inner p-6 md:p-10">
+          
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-6 mb-10">
+            <h2 className="text-xl font-black uppercase tracking-tighter italic">
+              User Directory <span className="text-primary opacity-50">[{filteredUsers.length}]</span>
+            </h2>
+            
+            <div className="relative w-full lg:max-w-md group">
+              <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 opacity-20 group-focus-within:text-primary group-focus-within:opacity-100 transition-all" />
+              <input
+                type="text"
+                placeholder="Search by name, email or ID..."
+                className="w-full pl-14 pr-6 py-4 bg-base-100/50 rounded-2xl border border-base-content/10 outline-none focus:ring-2 focus:ring-primary/20 font-bold text-[10px] tracking-[0.2em] uppercase"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
+          </div>
 
-            <div className="flex justify-center mt-6 gap-4 items-center">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                className="px-4 py-2 bg-base-300 hover:bg-base-200 rounded disabled:opacity-50"
-                disabled={currentPage === 1}
-              >
-                ◀ Previous
-              </button>
-              <span className="text-base-content font-medium">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                className="px-4 py-2 bg-base-300 hover:bg-base-200 rounded disabled:opacity-50"
-                disabled={currentPage === totalPages}
-              >
-                Next ▶
-              </button>
+          {error ? (
+            <div className="p-20 text-center bg-error/10 rounded-[2rem] border border-error/20">
+               <p className="text-error font-black uppercase tracking-widest">System Sync Error</p>
+               <button onClick={() => window.location.reload()} className="mt-4 text-xs font-bold underline opacity-50">Retry Connection</button>
             </div>
-          </>
-        )}
+          ) : isLoading ? (
+            <div className="flex flex-col items-center justify-center h-96 gap-6">
+              <PuffLoader color="hsl(var(--p))" size={60} />
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] opacity-30 animate-pulse">Initializing Data Stream...</span>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="overflow-x-auto rounded-[2rem]">
+                <table className="table w-full border-separate border-spacing-y-3">
+                  <thead>
+                    <tr className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 border-none">
+                      <th className="bg-transparent px-8">Member Identity</th>
+                      <th className="bg-transparent">Credential</th>
+                      <th className="bg-transparent">Role status</th>
+                      <th className="bg-transparent">Registration</th>
+                      <th className="bg-transparent text-right pr-8">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedUsers.map((user: userData, index: number) => (
+                      <tr key={index} className="bg-base-100/40 hover:bg-base-100/80 transition-all border-none">
+                        <td className="px-8 py-5 rounded-l-3xl">
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center font-black text-primary italic shadow-inner">
+                              {user.firstName[0]}{user.lastName[0]}
+                            </div>
+                            <div>
+                              <p className="font-black text-xs uppercase tracking-tighter">{user.firstName} {user.lastName}</p>
+                              <p className="text-[10px] opacity-40 font-bold italic tracking-wider">ID: {user.nationalId}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="text-[11px] font-bold opacity-60 italic">{user.email}</td>
+                        <td>
+                          <div className={`badge badge-outline gap-2 font-black italic uppercase text-[8px] tracking-[0.2em] p-3 rounded-xl ${
+                            user.role === 'admin' ? "badge-primary shadow-lg shadow-primary/10" : "opacity-40"
+                          }`}>
+                            {user.role === 'admin' ? <FaUserShield size={10}/> : <FaUserGroup size={10}/>}
+                            {user.role}
+                          </div>
+                        </td>
+                        <td className="text-[10px] font-bold opacity-30 uppercase tracking-widest">
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="rounded-r-3xl text-right pr-8">
+                          <div className="flex justify-end gap-3 transition-opacity">
+                            <button 
+                              onClick={() => handleEdit(user)}
+                              className="p-3 bg-blue-500/10 text-blue-500 rounded-xl hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                              title="Edit Profile"
+                            >
+                              <FaEdit size={14} />
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(user.nationalId)}
+                              className="p-3 bg-error/10 text-error rounded-xl hover:bg-error hover:text-white transition-all shadow-sm"
+                              title="Delete User"
+                            >
+                              <FaTrashCan size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination Section */}
+              <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-base-content/5 gap-6">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-20">
+                  Showing {paginatedUsers.length} of {filteredUsers.length} total entries
+                </p>
+                
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-4 rounded-2xl bg-base-100 border border-base-content/5 hover:bg-primary/10 disabled:opacity-20 transition-all shadow-md"
+                  >
+                    <FaChevronLeft size={12} />
+                  </button>
+                  
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-black italic text-primary">{currentPage}</span>
+                    <span className="text-xs font-black opacity-20 mx-1">/</span>
+                    <span className="text-xs font-black opacity-40">{totalPages}</span>
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-4 rounded-2xl bg-base-100 border border-base-content/5 hover:bg-primary/10 disabled:opacity-20 transition-all shadow-md"
+                  >
+                    <FaChevronRight size={12} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

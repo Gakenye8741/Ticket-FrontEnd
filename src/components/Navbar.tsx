@@ -40,7 +40,7 @@ export const Navbar = () => {
       : "text-base-content/60 hover:text-primary transition-all";
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -62,11 +62,12 @@ export const Navbar = () => {
 
   return (
     <>
-      {/* --- TOP NAVBAR (Branding & User) --- */}
-      <nav className={`fixed top-0 left-0 w-full z-[60] transition-all duration-500 ${
+      {/* --- TOP NAVBAR --- */}
+      {/* Increased Z-INDEX to 100 to stay above all content */}
+      <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${
         scrolled 
-          ? "py-2 bg-base-100/40 backdrop-blur-2xl border-b border-white/10 shadow-xl" 
-          : "py-4 bg-transparent"
+          ? "py-2 bg-base-100/60 backdrop-blur-2xl border-b border-white/10 shadow-2xl" 
+          : "py-4 bg-base-100/20 backdrop-blur-md border-b border-white/5"
       }`}>
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
           
@@ -75,9 +76,6 @@ export const Navbar = () => {
             <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:rotate-12 transition-transform shrink-0">
               <Sparkles className="text-white w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            {/* FIX: Responsive width and font sizing for the typing text.
-                Used text-lg for mobile and text-2xl for desktop to keep it proportional.
-            */}
             <div className="w-28 sm:w-44 overflow-hidden flex items-center min-h-[40px]">
               <span 
                 ref={typedRef} 
@@ -86,8 +84,8 @@ export const Navbar = () => {
             </div>
           </Link>
 
-          {/* Desktop Links */}
-          <div className="hidden lg:flex items-center gap-1 bg-white/5 backdrop-blur-md p-1.5 rounded-2xl border border-white/10">
+          {/* Desktop Links - Refined Glassmorphism */}
+          <div className="hidden lg:flex items-center gap-1 bg-white/10 backdrop-blur-xl p-1.5 rounded-2xl border border-white/10 shadow-inner">
             {[
               { path: "/", label: "Home", icon: Home },
               { path: "/about", label: "About", icon: Info },
@@ -112,8 +110,8 @@ export const Navbar = () => {
             {isAuthenticated ? (
               <div className="dropdown dropdown-end group">
                 <label tabIndex={0} className="relative cursor-pointer block">
-                  <div className="flex items-center gap-2 bg-base-100/50 backdrop-blur-md border border-white/10 p-1 pr-2 sm:pr-3 rounded-2xl hover:border-primary/50 transition-all">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden shadow-inner">
+                  <div className="flex items-center gap-2 bg-base-100/40 backdrop-blur-xl border border-white/10 p-1 pr-2 sm:pr-3 rounded-2xl hover:border-primary/50 transition-all shadow-lg">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl overflow-hidden shadow-inner border border-white/5">
                       <img
                         src={profileImageUrl || '/default-avatar.png'}
                         alt="Profile"
@@ -126,7 +124,7 @@ export const Navbar = () => {
                     <ChevronDown size={14} className="opacity-40 group-hover:rotate-180 group-hover:text-primary transition-all duration-300" />
                   </div>
                 </label>
-                <ul tabIndex={0} className="menu dropdown-content mt-4 p-2 shadow-2xl bg-base-100/90 backdrop-blur-xl rounded-2xl w-60 border border-white/10 z-[70] animate-in fade-in slide-in-from-top-2">
+                <ul tabIndex={0} className="menu dropdown-content mt-4 p-2 shadow-[0_20px_50px_rgba(0,0,0,0.3)] bg-base-100/80 backdrop-blur-3xl rounded-2xl w-64 border border-white/10 z-[110] animate-in fade-in slide-in-from-top-2">
                   <li className="menu-title text-[9px] uppercase tracking-[0.4em] opacity-40 px-4 py-2">Account Management</li>
                   <li>
                     <Link to={role === "admin" ? "/AdminDashBoard/analytics" : "/dashboard"} className="flex items-center gap-3 p-3 rounded-xl hover:bg-primary/10 transition-colors">
@@ -154,12 +152,13 @@ export const Navbar = () => {
         </div>
       </nav>
 
-      {/* --- REFINED MOBILE FLOATING DOCK (Fixed Bottom) --- */}
-      <div className="lg:hidden fixed bottom-3 left-1/2 -translate-x-1/2 w-[95%] max-w-[440px] z-[60]">
+      {/* --- FLOATING MOBILE DOCK --- */}
+      <div className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[420px] z-[100]">
         <div className="relative group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-transparent to-secondary/20 rounded-[2.5rem] blur-xl opacity-50"></div>
+          {/* Subtle Outer Glow */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 via-transparent to-secondary/30 rounded-[2.5rem] blur-2xl opacity-40"></div>
           
-          <div className="relative bg-base-100/40 backdrop-blur-3xl border border-white/10 rounded-[2.2rem] shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-1.5 flex justify-around items-center">
+          <div className="relative bg-base-100/40 backdrop-blur-3xl border border-white/20 rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.5)] p-2 flex justify-around items-center">
             {[
               { path: "/", icon: Home, label: "Home" },
               { path: "/about", icon: Info, label: "About" },
@@ -173,21 +172,21 @@ export const Navbar = () => {
                   to={item.path} 
                   className="relative flex-1 flex flex-col items-center justify-center py-2 group/item"
                 >
-                  <div className={`p-2 sm:p-2.5 rounded-2xl transition-all duration-500 ease-out flex items-center justify-center
+                  <div className={`p-2.5 rounded-2xl transition-all duration-500 ease-out flex items-center justify-center
                     ${location.pathname === item.path 
-                      ? "bg-primary text-white shadow-[0_0_20px_rgba(var(--p),0.4)] -translate-y-1 scale-110 rotate-[360deg]" 
+                      ? "bg-primary text-white shadow-[0_0_20px_rgba(var(--p),0.5)] -translate-y-2 scale-110 rotate-[360deg]" 
                       : "text-base-content/40 group-hover/item:text-primary group-hover/item:scale-110 active:scale-90"
                     }`}
                   >
-                    <item.icon size={20} strokeWidth={location.pathname === item.path ? 2.5 : 2} />
+                    <item.icon size={22} strokeWidth={location.pathname === item.path ? 2.5 : 2} />
                   </div>
                   
                   {location.pathname === item.path && (
-                    <div className="absolute -bottom-1 w-1 h-1 bg-primary rounded-full shadow-[0_0_8px_#var(--p)]"></div>
+                    <div className="absolute bottom-0 w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_10px_#var(--p)] animate-pulse"></div>
                   )}
                   
-                  <span className={`text-[7px] font-black uppercase tracking-widest mt-1 transition-opacity duration-300 
-                    ${location.pathname === item.path ? "opacity-100 text-primary" : "opacity-40"}`}>
+                  <span className={`text-[8px] font-black uppercase tracking-widest mt-1.5 transition-all duration-300 
+                    ${location.pathname === item.path ? "opacity-100 text-primary translate-y-0" : "opacity-40"}`}>
                     {item.label}
                   </span>
                 </Link>

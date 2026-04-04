@@ -4,8 +4,8 @@ import withReactContent from "sweetalert2-react-content";
 import { PuffLoader } from "react-spinners";
 import { bookingApi } from "../../features/APIS/BookingsApi";
 import { eventApi } from "../../features/APIS/EventsApi";
-import { FaEdit } from "react-icons/fa";
-import { FaDeleteLeft, FaX } from "react-icons/fa6";
+import { FaEdit, FaSearch, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaDeleteLeft, FaX, FaCalendarDay, FaDollarSign, FaLayerGroup } from "react-icons/fa6";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../App/store";
 
@@ -39,226 +39,249 @@ export const AllBookings: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [eventFilter, setEventFilter] = useState("");
-
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 6; // Reduced for better mobile scrolling
 
   const eventMap = new Map<number, string>(events.map((e: any) => [e.eventId, e.title]));
-
-  const firstName = useSelector((state:RootState)=>state.auth.user?.firstName)
+  const firstName = useSelector((state: RootState) => state.auth.user?.firstName);
 
   const filteredBookings = bookings.filter((b: Booking) => {
     const eventTitle = eventMap.get(b.eventId) ?? "";
     return (
-      (!searchTerm ||
-        b.bookingId.toString().includes(searchTerm) ||
-        b.nationalId.toString().includes(searchTerm)) &&
+      (!searchTerm || b.bookingId.toString().includes(searchTerm) || b.nationalId.toString().includes(searchTerm)) &&
       (!statusFilter || b.bookingStatus === statusFilter) &&
       (!eventFilter || eventTitle.toLowerCase().includes(eventFilter.toLowerCase()))
     );
   });
 
   const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
-  const paginatedBookings = filteredBookings.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedBookings = filteredBookings.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // --- Glassmorphism Modal Config ---
+  const glassModalConfig = {
+    background: "rgba(15, 23, 42, 0.8)",
+    color: "#fff",
+    customClass: {
+      popup: "rounded-[2rem] border border-white/10 backdrop-blur-xl shadow-2xl w-[90%] max-w-md",
+      input: "!bg-slate-800/50 !text-white !rounded-xl !border-white/10 !text-sm",
+      confirmButton: "!rounded-xl !bg-primary !px-8 !py-3 !text-xs !font-black !uppercase",
+      cancelButton: "!rounded-xl !bg-slate-700 !px-8 !py-3 !text-xs !font-black !uppercase"
+    }
+  };
 
   const openStatusModal = async (booking: Booking) => {
     const { value: newStatus } = await MySwal.fire({
-      title: `Update status for Booking #${booking.bookingId}`,
+      ...glassModalConfig,
+      title: `UPDATE STATUS #${booking.bookingId}`,
       input: "select",
-      inputOptions: bookingStatusEnum.reduce((acc, status) => {
-        acc[status] = status;
-        return acc;
-      }, {} as Record<string, string>),
+      inputOptions: bookingStatusEnum.reduce((acc, status) => { acc[status] = status; return acc; }, {} as Record<string, string>),
       inputValue: booking.bookingStatus,
       showCancelButton: true,
-      confirmButtonText: "Update",
-      customClass: { popup: "glass-modal" },
+      confirmButtonText: "UPDATE",
     });
 
     if (newStatus && newStatus !== booking.bookingStatus) {
       try {
         await updateStatus({ bookingId: booking.bookingId, status: newStatus as BookingStatus }).unwrap();
-        MySwal.fire("Success", "Booking status updated.", "success");
+        MySwal.fire({ ...glassModalConfig, title: "SUCCESS", icon: "success", showConfirmButton: false, timer: 1500 });
       } catch {
-        MySwal.fire("Error", "Failed to update status.", "error");
+        MySwal.fire({ ...glassModalConfig, title: "ERROR", text: "Update failed", icon: "error" });
       }
     }
   };
 
   const handleCancel = async (bookingId: number) => {
     const confirm = await MySwal.fire({
-      title: "Cancel booking?",
-      text: "This will mark the booking as Cancelled and refund tickets.",
+      ...glassModalConfig,
+      title: "CANCEL BOOKING?",
+      text: "This action will refund the tickets.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#ef4444",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Yes, cancel it!",
+      confirmButtonColor: "#eab308",
+      confirmButtonText: "YES, CANCEL",
     });
 
     if (confirm.isConfirmed) {
       try {
         await cancelBooking(bookingId).unwrap();
-        MySwal.fire("Cancelled!", "Booking has been cancelled.", "success");
+        MySwal.fire({ ...glassModalConfig, title: "CANCELLED", icon: "success", timer: 1500 });
       } catch {
-        MySwal.fire("Error", "Failed to cancel booking.", "error");
+        MySwal.fire({ ...glassModalConfig, title: "ERROR", icon: "error" });
       }
     }
   };
 
   const handleDelete = async (bookingId: number) => {
     const confirm = await MySwal.fire({
-      title: "Delete booking?",
-      text: "This booking will be permanently removed.",
-      icon: "warning",
+      ...glassModalConfig,
+      title: "DELETE RECORD?",
+      text: "This is permanent!",
+      icon: "error",
       showCancelButton: true,
       confirmButtonColor: "#ef4444",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Delete",
+      confirmButtonText: "DELETE NOW",
     });
 
     if (confirm.isConfirmed) {
       try {
         await deleteBooking(bookingId).unwrap();
-        MySwal.fire("Deleted!", "Booking has been removed.", "success");
+        MySwal.fire({ ...glassModalConfig, title: "DELETED", icon: "success", timer: 1500 });
       } catch {
-        MySwal.fire("Error", "Failed to delete booking.", "error");
+        MySwal.fire({ ...glassModalConfig, title: "ERROR", icon: "error" });
       }
     }
   };
 
   const getStatusBadge = (status: BookingStatus) => {
-    const colorMap: Record<BookingStatus, string> = {
-      Pending: "bg-yellow-500",
-      Confirmed: "bg-green-500",
-      Cancelled: "bg-red-500",
+    const styles: Record<BookingStatus, string> = {
+      Pending: "badge-warning shadow-warning/20",
+      Confirmed: "badge-success shadow-success/20",
+      Cancelled: "badge-error shadow-error/20",
     };
     return (
-      <span className={`px-2 py-1 text-xs rounded text-white ${colorMap[status]}`}>{status}</span>
+      <div className={`badge badge-outline gap-1 font-black italic uppercase text-[7px] tracking-widest p-2 rounded-lg ${styles[status]}`}>
+        {status}
+      </div>
     );
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <PuffLoader color="#14b8a6" />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-base-100">
+        <PuffLoader color="hsl(var(--p))" size={60} />
       </div>
     );
   }
 
-  if (error) {
-    return <div className="text-center text-red-400">Error loading bookings.</div>;
-  }
-
   return (
-    <div className="min-h-screen p-6 bg-base-100 text-base-content">
-      <div className="mb-6 text-xl sm:text-2xl font-semibold text-primary">
-        👋 Hey {firstName}, welcome!
-      </div>
-      <div className="w-full max-w-7xl mx-auto bg-base-200 border border-base-content/10 shadow-xl rounded-xl p-6 overflow-x-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-          <h2 className="text-3xl font-bold text-primary">All Bookings</h2>
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full sm:w-auto">
+    <div className="min-h-screen bg-base-100 p-4 pb-32 font-sans md:p-8"> {/* pb-32 accounts for fixed navbar */}
+      <div className="max-w-7xl mx-auto space-y-6">
+        
+        {/* Header */}
+        <div className="bg-base-200/50 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-base-content/5 shadow-xl">
+          <h1 className="text-2xl md:text-5xl font-black italic uppercase tracking-tighter">
+            👋 HEY <span className="text-primary">{firstName}</span>
+          </h1>
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40 mt-1">Booking Control Center</p>
+        </div>
+
+        {/* Search & Filters */}
+        <div className="grid grid-cols-1 gap-3 bg-base-200/30 p-4 rounded-[2rem] md:grid-cols-3">
+          <div className="relative">
+            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" />
             <input
               type="text"
-              placeholder="Search Booking / National ID"
-              className="px-4 py-2 w-full sm:w-48 rounded-md bg-base-300 text-base-content placeholder:text-base-content/50"
+              placeholder="SEARCH ID..."
+              className="w-full pl-10 pr-4 py-3 bg-base-100/50 rounded-xl border border-base-content/5 text-[10px] font-bold uppercase outline-none"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 rounded bg-base-300 text-base-content"
-            >
-              <option value="">All Statuses</option>
-              {bookingStatusEnum.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              placeholder="Filter by Event Name"
-              className="px-4 py-2 w-full sm:w-48 rounded-md bg-base-300 text-base-content placeholder:text-base-content/50"
-              value={eventFilter}
-              onChange={(e) => setEventFilter(e.target.value)}
-            />
+          </div>
+          <select
+            className="w-full px-4 py-3 bg-base-100/50 rounded-xl border border-base-content/5 text-[10px] font-bold uppercase outline-none"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">ALL STATUSES</option>
+            {bookingStatusEnum.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <input
+            type="text"
+            placeholder="FILTER BY EVENT..."
+            className="w-full px-4 py-3 bg-base-100/50 rounded-xl border border-base-content/5 text-[10px] font-bold uppercase outline-none"
+            value={eventFilter}
+            onChange={(e) => setEventFilter(e.target.value)}
+          />
+        </div>
+
+        {/* Mobile List / Desktop Table */}
+        <div className="space-y-4">
+          {/* Desktop Table View (Hidden on Mobile) */}
+          <div className="hidden md:block bg-base-200/30 backdrop-blur-md rounded-[2.5rem] p-6 overflow-hidden">
+            <table className="table w-full border-separate border-spacing-y-3">
+              <thead>
+                <tr className="text-[10px] font-black uppercase tracking-widest opacity-30 border-none">
+                  <th className="px-8">Booking</th>
+                  <th>Event</th>
+                  <th>Finance</th>
+                  <th>Status</th>
+                  <th className="text-right pr-8">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedBookings.map((b) => (
+                  <tr key={b.bookingId} className="bg-base-100/40 hover:bg-base-100/80 transition-all border-none">
+                    <td className="px-8 py-5 rounded-l-3xl">
+                      <p className="font-black text-xs uppercase tracking-tighter">#{b.bookingId}</p>
+                      <p className="text-[9px] opacity-40 font-bold tracking-widest">NAT: {b.nationalId}</p>
+                    </td>
+                    <td>
+                      <p className="font-black text-[11px] uppercase italic text-primary/80 truncate max-w-[150px]">{eventMap.get(b.eventId)}</p>
+                      <p className="text-[9px] opacity-40 font-bold">{new Date(b.createdAt).toLocaleDateString()}</p>
+                    </td>
+                    <td>
+                      <p className="font-black text-xs">${Number(b.totalAmount).toFixed(2)}</p>
+                      <p className="text-[9px] opacity-40 font-bold uppercase">Qty: {b.quantity}</p>
+                    </td>
+                    <td>{getStatusBadge(b.bookingStatus)}</td>
+                    <td className="rounded-r-3xl text-right pr-8">
+                      <div className="flex justify-end gap-2">
+                        <button onClick={() => openStatusModal(b)} className="p-2.5 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all"><FaEdit size={12}/></button>
+                        <button onClick={() => handleCancel(b.bookingId)} className="p-2.5 bg-yellow-500/10 text-yellow-500 rounded-lg hover:bg-yellow-500 hover:text-white transition-all"><FaX size={12}/></button>
+                        <button onClick={() => handleDelete(b.bookingId)} className="p-2.5 bg-error/10 text-error rounded-lg hover:bg-error hover:text-white transition-all"><FaDeleteLeft size={12}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View (Hidden on Desktop) */}
+          <div className="grid grid-cols-1 gap-4 md:hidden">
+            {paginatedBookings.map((b) => (
+              <div key={b.bookingId} className="bg-base-200/50 backdrop-blur-md p-5 rounded-[1.5rem] border border-white/5 space-y-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[8px] font-black uppercase tracking-widest opacity-30 block">Booking ID</span>
+                    <h3 className="font-black italic text-sm text-primary">#{b.bookingId}</h3>
+                  </div>
+                  {getStatusBadge(b.bookingStatus)}
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 border-y border-white/5 py-3">
+                  <div>
+                    <span className="text-[8px] font-black uppercase tracking-widest opacity-30 flex items-center gap-1"><FaCalendarDay size={8}/> Created</span>
+                    <p className="text-[10px] font-bold">{new Date(b.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <span className="text-[8px] font-black uppercase tracking-widest opacity-30 flex items-center gap-1"><FaLayerGroup size={8}/> Tickets</span>
+                    <p className="text-[10px] font-bold uppercase">Qty: {b.quantity}</p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-1 text-xs font-black">
+                    <FaDollarSign size={10} className="text-success" />
+                    {Number(b.totalAmount).toFixed(2)}
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => openStatusModal(b)} className="p-3 bg-blue-500/20 text-blue-500 rounded-xl active:scale-95"><FaEdit size={14}/></button>
+                    <button onClick={() => handleCancel(b.bookingId)} className="p-3 bg-yellow-500/20 text-yellow-500 rounded-xl active:scale-95"><FaX size={14}/></button>
+                    <button onClick={() => handleDelete(b.bookingId)} className="p-3 bg-error/20 text-error rounded-xl active:scale-95"><FaDeleteLeft size={14}/></button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {filteredBookings.length === 0 ? (
-          <div className="text-center text-base-content/70">No bookings match your filters.</div>
-        ) : (
-          <>
-            <div className="overflow-x-auto rounded-md border border-base-content/10 shadow-md">
-              <table className="min-w-full text-sm text-base-content border border-base-content/20">
-                <thead>
-                  <tr className="bg-base-300 text-primary uppercase text-xs border-b border-base-content/10">
-                    <th className="px-4 py-2 text-left">Booking ID</th>
-                    <th className="px-4 py-2 text-left">National ID</th>
-                    <th className="px-4 py-2 text-left">Event</th>
-                    <th className="px-4 py-2 text-left">Quantity</th>
-                    <th className="px-4 py-2 text-left">Total</th>
-                    <th className="px-4 py-2 text-left">Status</th>
-                    <th className="px-4 py-2 text-left">Created</th>
-                    <th className="px-4 py-2 text-left">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedBookings.map((b: Booking) => (
-                    <tr key={b.bookingId} className="border-b border-base-content/10 hover:bg-base-300">
-                      <td className="px-4 py-2">{b.bookingId}</td>
-                      <td className="px-4 py-2">{b.nationalId}</td>
-                      <td className="px-4 py-2">{eventMap.get(b.eventId) ?? "Unknown"}</td>
-                      <td className="px-4 py-2">{b.quantity}</td>
-                      <td className="px-4 py-2">${Number(b.totalAmount).toFixed(2)}</td>
-                      <td className="px-4 py-2">{getStatusBadge(b.bookingStatus)}</td>
-                      <td className="px-4 py-2">{new Date(b.createdAt).toLocaleDateString()}</td>
-                      <td className="px-4 py-2 space-x-2">
-                        <button
-                          onClick={() => openStatusModal(b)}
-                          className="text-xs px-2 py-1 bg-blue-600 rounded hover:bg-blue-700"
-                        ><FaEdit /></button>
-                        <button
-                          onClick={() => handleCancel(b.bookingId)}
-                          className="text-xs px-2 py-1 bg-yellow-600 rounded hover:bg-yellow-700"
-                        ><FaX /></button>
-                        <button
-                          onClick={() => handleDelete(b.bookingId)}
-                          className="text-xs px-2 py-1 bg-red-600 rounded hover:bg-red-700"
-                        ><FaDeleteLeft /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination Controls */}
-            <div className="flex justify-center items-center gap-4 mt-6">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                className="px-4 py-2 bg-base-300 hover:bg-base-200 rounded disabled:opacity-50"
-                disabled={currentPage === 1}
-              >
-                ◀ Previous
-              </button>
-              <span className="text-base-content">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                className="px-4 py-2 bg-base-300 hover:bg-base-200 rounded disabled:opacity-50"
-                disabled={currentPage === totalPages}
-              >
-                Next ▶
-              </button>
-            </div>
-          </>
-        )}
+        {/* Pagination */}
+        <div className="flex justify-between items-center bg-base-200/30 p-4 rounded-2xl">
+          <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-3 bg-base-100 rounded-xl disabled:opacity-20"><FaChevronLeft size={10}/></button>
+          <span className="text-[10px] font-black italic text-primary uppercase">Page {currentPage} / {totalPages}</span>
+          <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-3 bg-base-100 rounded-xl disabled:opacity-20"><FaChevronRight size={10}/></button>
+        </div>
       </div>
     </div>
   );
