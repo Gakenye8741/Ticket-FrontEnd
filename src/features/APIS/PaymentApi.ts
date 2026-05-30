@@ -6,7 +6,7 @@ import type { RootState } from '../../App/store';
 export const paymentApi = createApi({
   reducerPath: 'paymentApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'https://ticket-backend-xv5a.onrender.com/api/',
+    baseUrl: 'https://ticketstream-dmamgjd7hcdeeecn.southafricanorth-01.azurewebsites.net/api/',
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as RootState).auth.token;
       if (token) {

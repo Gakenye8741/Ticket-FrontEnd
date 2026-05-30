@@ -17,6 +17,7 @@ import { adminResponseApi } from "../features/APIS/AdminReponse";
 import { paymentApi } from "../features/APIS/PaymentApi";
 import { emailApi } from "../features/APIS/SendngEmails";
 import { mpesaApi } from "../features/APIS/MpesaApi"; 
+import { qrTicketApi } from "../features/APIS/QrcodeTicketApi";
 
 // Create Persist Configuration for auth Slice
 const authPersistConfiguration = {
@@ -42,6 +43,7 @@ export const store = configureStore({
     [paymentApi.reducerPath]: paymentApi.reducer,
     [emailApi.reducerPath]: emailApi.reducer,
     [mpesaApi.reducerPath]: mpesaApi.reducer,
+    [qrTicketApi.reducerPath]: qrTicketApi.reducer,
     auth: persistedAuthReducer,
   }, // <--- Fixed: Added missing comma here
   middleware: (getDefaultMiddleware) =>
@@ -58,7 +60,8 @@ export const store = configureStore({
       adminResponseApi.middleware,
       paymentApi.middleware,
       emailApi.middleware,
-      mpesaApi.middleware 
+      mpesaApi.middleware ,
+      qrTicketApi.middleware
     ),
 });
 

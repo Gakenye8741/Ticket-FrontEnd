@@ -33,6 +33,7 @@ import SalesReport from './DashBoards/adminDashboard/SalesReport';
 import AdminUserProfile from './DashBoards/adminDashboard/AdminUserProfile';
 import { Toaster } from 'react-hot-toast';
 import BackButtonHandler from './pages/BackButtonHandler';
+import QrCodes from './DashBoards/dashboard/QRcodes';
 
 function App() {
   const Router = createBrowserRouter([
@@ -71,7 +72,9 @@ function App() {
         { path: 'MyBookings', element: <BookingsByNationalId /> },
         { path: 'supportTickets', element: <UserSupportTickets /> },
         { path: 'Payments', element: <GetPaymentsByNationalId /> },
-        { path: 'MyTickets', element: <TicketDisplay /> }
+        { path: 'MyTickets', element: <TicketDisplay /> },
+        { path: 'qr-codes', element: <QrCodes /> }
+        
       ],
     },
     {

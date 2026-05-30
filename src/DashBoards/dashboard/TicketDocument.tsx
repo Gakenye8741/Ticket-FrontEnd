@@ -1,6 +1,11 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'; // Imported Image
 import type { TicketDocumentProps } from './types';
+
+// Extended the component props directly to accept the dynamic qrCodeUrl data stream
+interface ExtendedTicketDocumentProps extends TicketDocumentProps {
+  qrCodeUrl?: string;
+}
 
 const styles = StyleSheet.create({
   page: {
@@ -118,6 +123,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#4f46e5',
   },
+  qrContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 20,
+  },
+  qrCode: {
+    width: 100,
+    height: 100,
+  },
   securityNote: {
     marginTop: 'auto',
     paddingTop: 15,
@@ -138,13 +152,14 @@ const styles = StyleSheet.create({
   }
 });
 
-const TicketDocument: React.FC<TicketDocumentProps> = ({
+const TicketDocument: React.FC<ExtendedTicketDocumentProps> = ({
   user,
   event,
   ticketType,
   booking,
   total,
   paymentStatus,
+  qrCodeUrl, // Destructured raw base64 data URL string passed down from TicketItem parent
 }) => {
   const securityHash = `TXN-${booking.bookingId}-${user.nationalId}-${Date.now()}`.toUpperCase();
 
@@ -209,6 +224,13 @@ const TicketDocument: React.FC<TicketDocumentProps> = ({
             <Text style={styles.totalLabel}>TOTAL PAID</Text>
             <Text style={styles.totalValue}>KSH {total.toLocaleString('en-KE')}</Text>
           </View>
+
+          {/* Dynamic Scannable QR Code Vector Block */}
+          {qrCodeUrl && (
+            <View style={styles.qrContainer}>
+              <Image style={styles.qrCode} src={qrCodeUrl} />
+            </View>
+          )}
 
           {/* Verification Section */}
           <View style={styles.securityNote}>

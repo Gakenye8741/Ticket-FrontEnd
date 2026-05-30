@@ -131,7 +131,7 @@ function App() {
               </p>
 
               <div className="flex flex-wrap gap-4 pt-4">
-                <Link to={isAdmin ? "/admin/events" : "/events"}
+                <Link to={isAdmin ? "/AdminDashBoard/analytics" : "/events"}
                   className="btn btn-primary btn-lg px-12 rounded-2xl font-black shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all group border-none h-16 uppercase tracking-[0.3em] text-[10px]">
                   {isAdmin ? 'Manage Events' : 'Explore Feed'}
                   <Search size={18} className="ml-2 group-hover:rotate-12 transition-transform" />
